@@ -130,7 +130,7 @@ Use Docker Compose:
 ```yaml
 services:
   met-office-mcp-server:
-    image: ghcr.io/smling/met-office-mcp-server:latest
+    image: ${MET_OFFICE_MCP_IMAGE:-ghcr.io/smling/met-office-mcp-server:latest}
     container_name: met-office-mcp-server
     ports:
       - "8080:8080"
@@ -142,6 +142,8 @@ services:
     restart: unless-stopped
 ```
 
+This repository also includes a root [`docker-compose.yaml`](docker-compose.yaml) that reads the same values from `.env` through `env_file`.
+
 Example `.env` for Compose:
 
 ```dotenv
@@ -149,6 +151,7 @@ MET_OFFICE_ATMOSPHERIC_API_KEY=your-atmospheric-key
 MET_OFFICE_SITE_SPECIFIC_API_KEY=your-site-specific-key
 MET_OFFICE_OBSERVATIONS_API_KEY=your-observations-key
 MET_OFFICE_MAP_IMAGES_API_KEY=your-map-images-key
+MET_OFFICE_MCP_IMAGE=ghcr.io/smling/met-office-mcp-server:latest
 ```
 
 > [!NOTE]

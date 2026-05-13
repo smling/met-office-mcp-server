@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ImportRuntimeHints;
 
 /**
  * Marks Spring AI MCP annotation scanner beans as infrastructure so Spring does not warn when the scanner post-processor
@@ -19,6 +20,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnClass(McpTool.class)
 @ConditionalOnProperty(prefix = "spring.ai.mcp.server.annotation-scanner", name = "enabled", havingValue = "true",
         matchIfMissing = true)
+@ImportRuntimeHints(McpNativeRuntimeHints.class)
 class McpAnnotationScannerInfrastructureConfiguration {
 
     static final String[] MCP_ANNOTATION_SCANNER_INFRASTRUCTURE_BEANS = {

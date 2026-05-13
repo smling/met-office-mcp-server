@@ -2,11 +2,15 @@ package io.github.smling.met_office_mcp_server;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
+import org.springframework.ai.mcp.annotation.context.DefaultMetaProvider;
+import org.springframework.aot.hint.RuntimeHints;
+import org.springframework.aot.hint.predicate.RuntimeHintsPredicates;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.SpringApplication;
@@ -29,6 +33,17 @@ class MetOfficeMcpServerApplicationTests {
 			assertEquals(BeanDefinition.ROLE_INFRASTRUCTURE,
 					applicationContext.getBeanFactory().getBeanDefinition(beanName).getRole());
 		}
+	}
+
+	@Test
+	void mcpDefaultMetaProviderConstructorIsRegisteredForNativeReflection() throws NoSuchMethodException {
+		RuntimeHints hints = new RuntimeHints();
+
+		new McpNativeRuntimeHints().registerHints(hints, getClass().getClassLoader());
+
+		assertTrue(RuntimeHintsPredicates.reflection()
+				.onConstructorInvocation(DefaultMetaProvider.class.getConstructor())
+				.test(hints));
 	}
 
 	@Test

@@ -24,6 +24,8 @@
 - Updated GitHub CD to build and push a GraalVM native container image through Spring Boot `bootBuildImage` with the Paketo tiny builder. Added a `-PnativeImage` Gradle switch for native buildpack image settings. Verified task wiring with a `bootBuildImage --dry-run` and full tests with `.\gradlew.bat test`.
 - Set the CD native image buildpack JVM version to 25 through `-PnativeImageJvmVersion=25`, because Paketo Spring Boot buildpack 5.36.2 does not support Spring Boot 4 native images with a downloaded GraalVM/NIK lower than Java 25.
 - Added a user-first `README.md` covering features, configuration, quick start, Docker and Compose usage, MCP tool names, testing, native builds, security notes, project layout, and references.
+- Added root `docker-compose.yaml` for running the published GHCR image with environment values loaded from the ignored local `.env` file. The image can be overridden with `MET_OFFICE_MCP_IMAGE`.
+- Added a GraalVM runtime hint for Spring AI MCP `DefaultMetaProvider` so native images can instantiate the default MCP annotation metadata provider reflectively at startup. Verified with `.\gradlew.bat test`, `.\gradlew.bat processAot`, a full native `bootBuildImage`, and a native container startup smoke test.
 
 ## Follow-Up Notes
 
