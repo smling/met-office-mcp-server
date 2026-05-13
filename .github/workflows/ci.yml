@@ -20,16 +20,18 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-          cache: maven
+          cache: gradle
       - name: Compile
-        run: mvn -B -DskipTests compile
+        run: bash ./gradlew classes
       - name: Run tests
-        run: mvn -B test
+        run: bash ./gradlew test
       - name: Archive test reports
         uses: actions/upload-artifact@v4
         with:
           name: test-reports
-          path: target/surefire-reports
+          path: |
+            build/test-results/test
+            build/reports/tests/test
           if-no-files-found: warn
 
   coverage:
@@ -41,14 +43,14 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-          cache: maven
+          cache: gradle
       - name: Run tests with coverage
-        run: mvn -B verify
+        run: bash ./gradlew test
       - name: Archive coverage report
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-report
-          path: target/jacoco
+          path: build/reports/jacoco
           if-no-files-found: warn
 
   dependency-check:
@@ -60,9 +62,9 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-          cache: maven
+          cache: gradle
       - name: Build for dependency analysis
-        run: mvn -B -DskipTests package
+        run: bash ./gradlew assemble
       - name: Run dependency check
         uses: dependency-check/Dependency-Check_Action@main
         continue-on-error: true
@@ -73,7 +75,7 @@ jobs:
           project: ${{ github.repository }}
           path: .
           format: 'ALL'
-          out: target/dependency-check
+          out: build/reports/dependency-check
           args: >
             --nvdApiKey ${{ secrets.NVD_API_KEY }}
             --enableRetired
@@ -81,7 +83,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dependency-check-report
-          path: target/dependency-check
+          path: build/reports/dependency-check
           if-no-files-found: warn
 
   sast-codeql:
@@ -93,13 +95,13 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-          cache: maven
+          cache: gradle
       - name: Initialize CodeQL
         uses: github/codeql-action/init@main
         with:
           languages: java
       - name: Build
-        run: mvn -B -DskipTests package
+        run: bash ./gradlew assemble
       - name: Analyze
         uses: github/codeql-action/analyze@main
         with:
