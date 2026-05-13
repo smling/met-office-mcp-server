@@ -28,8 +28,12 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ env.RELEASE_SHA }}
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Set up GraalVM
+        uses: actions/setup-java@v4
+        with:
+          distribution: graalvm
+          java-version: '21'
+          cache: gradle
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -65,23 +69,28 @@ jobs:
             echo "$NOTES"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
-      - name: Build and push container image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.release_meta.outputs.tag }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          build-args: |
-            OCI_TITLE=${{ github.event.repository.name }}
-            OCI_DESCRIPTION=MET Office MCP Server
-            OCI_VERSION=${{ steps.release_meta.outputs.tag }}
-            OCI_SOURCE=${{ github.server_url }}/${{ github.repository }}
-            OCI_REVISION=${{ env.RELEASE_SHA }}
-            OCI_CREATED=${{ steps.release_meta.outputs.created }}
-            OCI_URL=${{ github.server_url }}/${{ github.repository }}
-            OCI_AUTHORS=${{ github.actor }}
+      - name: Build GraalVM native container image
+        shell: bash
+        env:
+          IMAGE_REF: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          IMAGE_TAG: ${{ steps.release_meta.outputs.tag }}
+          CREATED: ${{ steps.release_meta.outputs.created }}
+        run: |
+          set -euo pipefail
+          bash ./gradlew bootBuildImage \
+            -PnativeImage \
+            --imageName "${IMAGE_REF}:${IMAGE_TAG}" \
+            --createdDate "${CREATED}"
+          docker tag "${IMAGE_REF}:${IMAGE_TAG}" "${IMAGE_REF}:latest"
+      - name: Push container image
+        shell: bash
+        env:
+          IMAGE_REF: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          IMAGE_TAG: ${{ steps.release_meta.outputs.tag }}
+        run: |
+          set -euo pipefail
+          docker push "${IMAGE_REF}:${IMAGE_TAG}"
+          docker push "${IMAGE_REF}:latest"
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:

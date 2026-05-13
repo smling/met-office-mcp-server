@@ -52,3 +52,11 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+tasks.named('bootBuildImage') {
+	if (providers.gradleProperty('nativeImage').isPresent()) {
+		builder = 'paketobuildpacks/builder-jammy-tiny'
+		environment.put('BP_JVM_VERSION', '21')
+		environment.put('BP_NATIVE_IMAGE', 'true')
+	}
+}
