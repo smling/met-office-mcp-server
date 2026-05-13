@@ -79,6 +79,7 @@ jobs:
           set -euo pipefail
           bash ./gradlew bootBuildImage \
             -PnativeImage \
+            -PnativeImageJvmVersion=25 \
             --imageName "${IMAGE_REF}:${IMAGE_TAG}" \
             --createdDate "${CREATED}"
           docker tag "${IMAGE_REF}:${IMAGE_TAG}" "${IMAGE_REF}:latest"
