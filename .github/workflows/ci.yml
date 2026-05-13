@@ -1,0 +1,132 @@
+name: CI
+
+on:
+  push:
+  workflow_call:
+
+permissions:
+  contents: read
+  security-events: write   # for CodeQL upload
+  actions: read
+  packages: read
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Compile
+        run: mvn -B -DskipTests compile
+      - name: Run tests
+        run: mvn -B test
+      - name: Archive test reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: target/surefire-reports
+          if-no-files-found: warn
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Run tests with coverage
+        run: mvn -B verify
+      - name: Archive coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/jacoco
+          if-no-files-found: warn
+
+  dependency-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Build for dependency analysis
+        run: mvn -B -DskipTests package
+      - name: Run dependency check
+        uses: dependency-check/Dependency-Check_Action@main
+        continue-on-error: true
+        env:
+          JAVA_HOME: /opt/jdk
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        with:
+          project: ${{ github.repository }}
+          path: .
+          format: 'ALL'
+          out: target/dependency-check
+          args: >
+            --nvdApiKey ${{ secrets.NVD_API_KEY }}
+            --enableRetired
+      - name: Archive dependency check report
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: target/dependency-check
+          if-no-files-found: warn
+
+  sast-codeql:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@main
+        with:
+          languages: java
+      - name: Build
+        run: mvn -B -DskipTests package
+      - name: Analyze
+        uses: github/codeql-action/analyze@main
+        with:
+          output: codeql-results
+      - name: Archive CodeQL report
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeql-report
+          path: codeql-results
+          if-no-files-found: warn
+
+  secrets-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          report_format: json
+          report_path: gitleaks-report.json
+      - name: Archive gitleaks report
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-report
+          path: gitleaks-report.json
+          if-no-files-found: warn
