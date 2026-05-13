@@ -20,6 +20,8 @@
 - Added entry-point tests for `MetOfficeMcpServerApplication` construction and `SpringApplication.run` delegation. Verified with `.\gradlew.bat test`.
 - Added a local repo-root `.env` with Met Office API key environment variable placeholders and ignored it in `.gitignore` so real local keys are not tracked.
 - Marked Spring AI MCP annotation scanner beans as infrastructure before BeanPostProcessor registration so startup no longer logs the scanner-related `BeanPostProcessorChecker` warnings. Verified startup with `.\gradlew.bat bootRun --args='--spring.main.web-application-type=none'` and full tests with `.\gradlew.bat test`.
+- Updated GitHub CI to use the checked-in Gradle wrapper and Gradle output paths instead of Maven commands, caches, and `target/` artifacts. Verified locally with `.\gradlew.bat test` and `.\gradlew.bat assemble`.
+- Updated GitHub CD to build and push a GraalVM native container image through Spring Boot `bootBuildImage` with the Paketo tiny builder. Added a `-PnativeImage` Gradle switch for native buildpack image settings. Verified task wiring with a `bootBuildImage --dry-run` and full tests with `.\gradlew.bat test`.
 
 ## Follow-Up Notes
 
