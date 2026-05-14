@@ -8,6 +8,12 @@ spring:
         protocol: STREAMABLE
         type: SYNC
 
+management:
+  otlp:
+    metrics:
+      export:
+        enabled: ${MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED:false}
+
 met-office:
   atmospheric:
     api-key: ${MET_OFFICE_ATMOSPHERIC_API_KEY:}

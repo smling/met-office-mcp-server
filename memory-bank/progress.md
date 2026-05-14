@@ -26,6 +26,8 @@
 - Added a user-first `README.md` covering features, configuration, quick start, Docker and Compose usage, MCP tool names, testing, native builds, security notes, project layout, and references.
 - Added root `docker-compose.yaml` for running the published GHCR image with environment values loaded from the ignored local `.env` file. The image can be overridden with `MET_OFFICE_MCP_IMAGE`.
 - Added a GraalVM runtime hint for Spring AI MCP `DefaultMetaProvider` so native images can instantiate the default MCP annotation metadata provider reflectively at startup. Verified with `.\gradlew.bat test`, `.\gradlew.bat processAot`, a full native `bootBuildImage`, and a native container startup smoke test.
+- Added GraalVM reflection hints for `MetOfficeToolResponse` and nested `MetOfficeError` record component accessors so native images can serialize MCP tool responses. Verified with `.\gradlew.bat test`, `.\gradlew.bat processAot`, a full native `bootBuildImage`, and a native MCP `tools/call` smoke test against the local container.
+- Disabled OTLP metrics export by default through `MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED:false` so local and Compose runs do not warn when no collector is listening on `localhost:4318`; the Compose file sets the same default and documents the opt-in settings.
 
 ## Follow-Up Notes
 

@@ -66,6 +66,14 @@ Optional base URL overrides:
 | `MET_OFFICE_OBSERVATIONS_BASE_URL` | `https://data.hub.api.metoffice.gov.uk/observations/1.0.0` |
 | `MET_OFFICE_MAP_IMAGES_BASE_URL` | `https://data.hub.api.metoffice.gov.uk/map-images/1.0.0` |
 
+Optional runtime settings:
+
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `MET_OFFICE_MCP_IMAGE` | `ghcr.io/smling/met-office-mcp-server:latest` | Docker Compose image override. |
+| `MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED` | `false` | Enable OTLP metrics export when an OpenTelemetry collector is available. |
+| `MANAGEMENT_OTLP_METRICS_EXPORT_URL` | `http://localhost:4318/v1/metrics` | OTLP metrics endpoint used when export is enabled. |
+
 PowerShell:
 
 ```powershell
@@ -139,6 +147,8 @@ services:
       MET_OFFICE_SITE_SPECIFIC_API_KEY: ${MET_OFFICE_SITE_SPECIFIC_API_KEY}
       MET_OFFICE_OBSERVATIONS_API_KEY: ${MET_OFFICE_OBSERVATIONS_API_KEY}
       MET_OFFICE_MAP_IMAGES_API_KEY: ${MET_OFFICE_MAP_IMAGES_API_KEY}
+      MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED: ${MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED:-false}
+      MANAGEMENT_OTLP_METRICS_EXPORT_URL: ${MANAGEMENT_OTLP_METRICS_EXPORT_URL:-http://localhost:4318/v1/metrics}
     restart: unless-stopped
 ```
 
@@ -152,10 +162,12 @@ MET_OFFICE_SITE_SPECIFIC_API_KEY=your-site-specific-key
 MET_OFFICE_OBSERVATIONS_API_KEY=your-observations-key
 MET_OFFICE_MAP_IMAGES_API_KEY=your-map-images-key
 MET_OFFICE_MCP_IMAGE=ghcr.io/smling/met-office-mcp-server:latest
+MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED=false
 ```
 
 > [!NOTE]
 > The image name follows this repository's GHCR path: `ghcr.io/smling/met-office-mcp-server`. Use a version tag instead of `latest` when pinning production deployments.
+> OTLP metrics export is disabled by default so local containers do not try to publish to `localhost:4318`. Set `MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED=true` and `MANAGEMENT_OTLP_METRICS_EXPORT_URL` when running with a collector.
 
 ## 🧰 MCP Tools
 

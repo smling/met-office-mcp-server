@@ -1,10 +1,13 @@
 package io.github.smling.met_office_mcp_server;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+
+import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -17,6 +20,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import io.github.smling.met_office_mcp_server.model.MetOfficeToolResponse;
+
 @SpringBootTest
 class MetOfficeMcpServerApplicationTests {
 
@@ -25,6 +30,15 @@ class MetOfficeMcpServerApplicationTests {
 
 	@Test
 	void contextLoads() {
+	}
+
+	@Test
+	void otlpMetricsExportIsDisabledByDefault() {
+		assertEquals("false", applicationContext.getEnvironment()
+				.getProperty("management.otlp.metrics.export.enabled"));
+		assertFalse(Arrays.stream(applicationContext.getBeanDefinitionNames())
+				.anyMatch(beanName -> beanName.toLowerCase().contains("otlp")
+						&& beanName.toLowerCase().contains("meterregistry")));
 	}
 
 	@Test
@@ -44,6 +58,25 @@ class MetOfficeMcpServerApplicationTests {
 		assertTrue(RuntimeHintsPredicates.reflection()
 				.onConstructorInvocation(DefaultMetaProvider.class.getConstructor())
 				.test(hints));
+	}
+
+	@Test
+	void mcpToolResponseRecordsAreRegisteredForNativeReflection() throws NoSuchMethodException {
+		RuntimeHints hints = new RuntimeHints();
+
+		new McpNativeRuntimeHints().registerHints(hints, getClass().getClassLoader());
+
+		for (String accessor : new String[] {"product", "operation", "status", "contentType", "data",
+				"binaryBase64", "error"}) {
+			assertTrue(RuntimeHintsPredicates.reflection()
+					.onMethodInvocation(MetOfficeToolResponse.class.getMethod(accessor))
+					.test(hints));
+		}
+		for (String accessor : new String[] {"message", "status", "product", "endpoint", "responseBodyPreview"}) {
+			assertTrue(RuntimeHintsPredicates.reflection()
+					.onMethodInvocation(MetOfficeToolResponse.MetOfficeError.class.getMethod(accessor))
+					.test(hints));
+		}
 	}
 
 	@Test
