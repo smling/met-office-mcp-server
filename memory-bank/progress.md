@@ -31,6 +31,8 @@
 - Corrected Land Observations DataHub routing to use `/nearest` for latitude/longitude requests and `/{geohash}` for station geohash requests. Updated observations tool descriptions and URI/container expectations. Verified with `.\gradlew.bat test`.
 - Encoded atmospheric and map image binary download order/file IDs as path segments so reserved characters such as `+` are preserved correctly. Added opt-in `binaryDebug` mode for GRIB and PNG download tools so callers can inspect byte length, base64 length, and a short base64 preview without returning the full binary payload. Aligned observation tests with the current `lat`/`lon` query names in the dirty worktree. Verified with `.\gradlew.bat test`.
 - Added shared local validation for MCP client inputs, including required order/file/collection/location IDs, coordinate bounds, finite coordinate checks, and six-character station geohashes. Encoded remaining dynamic DataHub path segments for latest-order, BPF forecast location, and observation geohash calls. Optimized binary debug responses so they calculate metadata and preview without producing the full base64 payload. Verified with `.\gradlew.bat test`.
+- Added structured application logging for Met Office DataHub calls, local validation rejections, missing API keys, upstream non-2xx responses, and transport/parsing exceptions. Added `MET_OFFICE_MCP_LOG_LEVEL` so deployments can switch package logs from `INFO` to `DEBUG` for endpoint-level traces.
+- Enabled JUnit 5 class-level parallel test execution through `src/test/resources/junit-platform.properties` while keeping test methods within each class sequential so shared test fixtures remain deterministic.
 
 ## Follow-Up Notes
 

@@ -71,6 +71,7 @@ Optional runtime settings:
 | Environment variable | Default | Purpose |
 | --- | --- | --- |
 | `MET_OFFICE_MCP_IMAGE` | `ghcr.io/smling/met-office-mcp-server:latest` | Docker Compose image override. |
+| `MET_OFFICE_MCP_LOG_LEVEL` | `INFO` | Log level for this server's package; use `DEBUG` for request endpoint traces. |
 | `MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED` | `false` | Enable OTLP metrics export when an OpenTelemetry collector is available. |
 | `MANAGEMENT_OTLP_METRICS_EXPORT_URL` | `http://localhost:4318/v1/metrics` | OTLP metrics endpoint used when export is enabled. |
 

@@ -6,6 +6,8 @@ import io.github.smling.met_office_mcp_server.model.MetOfficeToolResponse.MetOff
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -20,6 +22,7 @@ import tools.jackson.databind.ObjectMapper;
 @Service
 public class MetOfficeDataHubClient {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MetOfficeDataHubClient.class);
     private static final int ERROR_PREVIEW_LENGTH = 2_000;
     private static final int BINARY_PREVIEW_LENGTH = 80;
 
@@ -93,6 +96,11 @@ public class MetOfficeDataHubClient {
             boolean jsonResponse,
             boolean binaryDebug) {
         if (apiKey == null || apiKey.isBlank()) {
+            LOGGER.warn(
+                    "Rejecting Met Office DataHub request because API key is missing: product={}, operation={}, endpoint={}",
+                    product.id(),
+                    operation,
+                    uri);
             return MetOfficeToolResponse.error(
                     product,
                     operation,
@@ -104,7 +112,16 @@ public class MetOfficeDataHubClient {
                             null));
         }
 
+        long startedAt = System.nanoTime();
         try {
+            LOGGER.debug(
+                    "Calling Met Office DataHub: product={}, operation={}, endpoint={}, accept={}, jsonResponse={}, binaryDebug={}",
+                    product.id(),
+                    operation,
+                    uri,
+                    accept,
+                    jsonResponse,
+                    binaryDebug);
             ResponseEntity<byte[]> response = restClient.get()
                     .uri(uri)
                     .accept(accept)
@@ -118,6 +135,15 @@ public class MetOfficeDataHubClient {
             String contentType = contentType(response.getHeaders());
             byte[] body = response.getBody() == null ? new byte[0] : response.getBody();
             if (!response.getStatusCode().is2xxSuccessful()) {
+                LOGGER.warn(
+                        "Met Office DataHub returned non-success status: product={}, operation={}, status={}, endpoint={}, contentType={}, responseBytes={}, durationMs={}",
+                        product.id(),
+                        operation,
+                        status,
+                        uri,
+                        contentType,
+                        body.length,
+                        durationMillis(startedAt));
                 return MetOfficeToolResponse.error(
                         product,
                         operation,
@@ -130,15 +156,47 @@ public class MetOfficeDataHubClient {
             }
             if (jsonResponse) {
                 JsonNode data = body.length == 0 ? objectMapper.createObjectNode() : objectMapper.readTree(body);
+                LOGGER.info(
+                        "Met Office DataHub JSON response received: product={}, operation={}, status={}, contentType={}, responseBytes={}, durationMs={}",
+                        product.id(),
+                        operation,
+                        status,
+                        contentType,
+                        body.length,
+                        durationMillis(startedAt));
                 return MetOfficeToolResponse.json(product, operation, status, contentType, data);
             }
             if (binaryDebug) {
+                LOGGER.info(
+                        "Met Office DataHub binary debug response received: product={}, operation={}, status={}, contentType={}, responseBytes={}, durationMs={}",
+                        product.id(),
+                        operation,
+                        status,
+                        contentType,
+                        body.length,
+                        durationMillis(startedAt));
                 return MetOfficeToolResponse.binaryDebug(
                         product, operation, status, contentType, binaryDebugData(body));
             }
             String binaryBase64 = Base64.getEncoder().encodeToString(body);
+            LOGGER.info(
+                    "Met Office DataHub binary response received: product={}, operation={}, status={}, contentType={}, responseBytes={}, base64Length={}, durationMs={}",
+                    product.id(),
+                    operation,
+                    status,
+                    contentType,
+                    body.length,
+                    binaryBase64.length(),
+                    durationMillis(startedAt));
             return MetOfficeToolResponse.binary(product, operation, status, contentType, binaryBase64);
         } catch (RuntimeException ex) {
+            LOGGER.warn(
+                    "Unable to call Met Office DataHub: product={}, operation={}, endpoint={}, durationMs={}",
+                    product.id(),
+                    operation,
+                    uri,
+                    durationMillis(startedAt),
+                    ex);
             return MetOfficeToolResponse.error(
                     product,
                     operation,
@@ -179,6 +237,10 @@ public class MetOfficeDataHubClient {
     private String contentType(HttpHeaders headers) {
         MediaType contentType = headers.getContentType();
         return contentType == null ? null : contentType.toString();
+    }
+
+    private long durationMillis(long startedAt) {
+        return (System.nanoTime() - startedAt) / 1_000_000;
     }
 
     private String preview(byte[] body) {

@@ -4,12 +4,15 @@ import io.github.smling.met_office_mcp_server.model.MetOfficeProduct;
 import io.github.smling.met_office_mcp_server.model.MetOfficeToolResponse;
 import java.util.Locale;
 import java.util.regex.Pattern;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Shared local validation helpers for Met Office product clients.
  */
 public final class MetOfficeClientValidation {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MetOfficeClientValidation.class);
     private static final Pattern SIX_CHARACTER_GEOHASH = Pattern.compile("[0-9bcdefghjkmnpqrstuvwxyz]{6}");
 
     private MetOfficeClientValidation() {
@@ -82,6 +85,11 @@ public final class MetOfficeClientValidation {
      */
     public static MetOfficeToolResponse validationError(
             MetOfficeProduct product, String operation, String message) {
+        LOGGER.info(
+                "Rejecting local Met Office request: product={}, operation={}, reason={}",
+                product.id(),
+                operation,
+                message);
         return MetOfficeToolResponse.error(
                 product,
                 operation,

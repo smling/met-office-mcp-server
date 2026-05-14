@@ -14,6 +14,10 @@ management:
       export:
         enabled: ${MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED:false}
 
+logging:
+  level:
+    io.github.smling.met_office_mcp_server: ${MET_OFFICE_MCP_LOG_LEVEL:INFO}
+
 met-office:
   atmospheric:
     api-key: ${MET_OFFICE_ATMOSPHERIC_API_KEY:}
