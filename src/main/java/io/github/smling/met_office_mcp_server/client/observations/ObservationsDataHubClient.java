@@ -1,6 +1,7 @@
 package io.github.smling.met_office_mcp_server.client.observations;
 
 import io.github.smling.met_office_mcp_server.MetOfficeProperties;
+import io.github.smling.met_office_mcp_server.client.MetOfficeClientValidation;
 import io.github.smling.met_office_mcp_server.client.MetOfficeDataHubClient;
 import io.github.smling.met_office_mcp_server.model.MetOfficeProduct;
 import io.github.smling.met_office_mcp_server.model.MetOfficeToolResponse;
@@ -31,25 +32,34 @@ public class ObservationsDataHubClient {
     }
 
     public MetOfficeToolResponse nearestStation(NearestStationRequest request) {
-        URI uri = client.uri(
-                properties.baseUrl(),
-                "/nearest",
-                client.query("lat", request.latitude()),
-                client.query("lon", request.longitude()));
-        return client.getJson(MetOfficeProduct.OBSERVATIONS, NEAREST_STATION, uri, apiKey);
+        return nearest(request.latitude(), request.longitude(), NEAREST_STATION);
     }
 
     public MetOfficeToolResponse byGeohash(ObservationsByGeohashRequest request) {
-        URI uri = client.uri(properties.baseUrl(), "/" + request.geohash());
+        MetOfficeToolResponse validation = MetOfficeClientValidation.sixCharacterGeohash(
+                MetOfficeProduct.OBSERVATIONS, BY_GEOHASH, request.geohash());
+        if (validation != null) {
+            return validation;
+        }
+        URI uri = client.uri(properties.baseUrl(), "/" + client.encodedPathSegment(request.geohash()));
         return client.getJson(MetOfficeProduct.OBSERVATIONS, BY_GEOHASH, uri, apiKey);
     }
 
     public MetOfficeToolResponse byLocation(ObservationsByLocationRequest request) {
+        return nearest(request.latitude(), request.longitude(), BY_LOCATION);
+    }
+
+    private MetOfficeToolResponse nearest(double latitude, double longitude, String operation) {
+        MetOfficeToolResponse validation = MetOfficeClientValidation.coordinates(
+                MetOfficeProduct.OBSERVATIONS, operation, latitude, longitude);
+        if (validation != null) {
+            return validation;
+        }
         URI uri = client.uri(
                 properties.baseUrl(),
                 "/nearest",
-                client.query("lat", request.latitude()),
-                client.query("lon", request.longitude()));
-        return client.getJson(MetOfficeProduct.OBSERVATIONS, BY_LOCATION, uri, apiKey);
+                client.query("lat", latitude),
+                client.query("lon", longitude));
+        return client.getJson(MetOfficeProduct.OBSERVATIONS, operation, uri, apiKey);
     }
 }

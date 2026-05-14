@@ -53,6 +53,20 @@ class MapImagesDataHubClientTests {
         server.verify();
     }
 
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("invalidCases")
+    void invalidRequestsReturnValidationErrorWithoutHttpCall(
+            String name, Function<MapImagesDataHubClient, MetOfficeToolResponse> call) {
+        MetOfficeToolResponse response = call.apply(client);
+
+        assertEquals(400, response.status());
+        assertEquals("map-images", response.product());
+        assertNotNull(response.error());
+        assertNull(response.data());
+        assertNull(response.binaryBase64());
+        server.verify();
+    }
+
     private static Stream<Arguments> happyCases() {
         return Stream.of(
                 Arguments.of(
@@ -69,6 +83,15 @@ class MapImagesDataHubClientTests {
                         Expected.json(
                                 "metoffice_map_image_latest_order",
                                 client -> client.latestOrder(new MapImageOrdersRequest("map-order", "12", true)),
+                                "latest")),
+                Arguments.of(
+                        "latest order with reserved path characters",
+                        URI.create("https://example.test/map/orders/map%2Border%2Fpart/latest?runfilter=12&includeLand=true&detail=MINIMAL"),
+                        MediaType.APPLICATION_JSON,
+                        bytes("{\"latest\":\"map\"}"),
+                        Expected.json(
+                                "metoffice_map_image_latest_order",
+                                client -> client.latestOrder(new MapImageOrdersRequest("map+order/part", "12", true)),
                                 "latest")),
                 Arguments.of(
                         "file",
@@ -90,6 +113,22 @@ class MapImagesDataHubClientTests {
                                 client -> client.file(new MapImageFileRequest(
                                         "map-order", null, "cloud_amount_total_ts0_+00", false)),
                                 "cG5n")));
+    }
+
+    private static Stream<Arguments> invalidCases() {
+        return Stream.of(
+                Arguments.of(
+                        "blank latest order id",
+                        (Function<MapImagesDataHubClient, MetOfficeToolResponse>)
+                                client -> client.latestOrder(new MapImageOrdersRequest(" ", "12", true))),
+                Arguments.of(
+                        "blank file order id",
+                        (Function<MapImagesDataHubClient, MetOfficeToolResponse>)
+                                client -> client.file(new MapImageFileRequest(" ", null, "file-1", false))),
+                Arguments.of(
+                        "blank file id",
+                        (Function<MapImagesDataHubClient, MetOfficeToolResponse>)
+                                client -> client.file(new MapImageFileRequest("map-order", null, "", false))));
     }
 
     private static byte[] bytes(String value) {

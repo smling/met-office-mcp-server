@@ -91,19 +91,47 @@ class SiteSpecificDataHubClientTests {
                         new Expected(
                                 "metoffice_bpf_forecast",
                                 client -> client.bpfForecast(
-                                        new BpfForecastRequest("improver-percentiles-spot-global", "loc-1")))));
+                                        new BpfForecastRequest("improver-percentiles-spot-global", "loc-1")))),
+                Arguments.of(
+                        "bpf forecast with reserved location id",
+                        URI.create("https://example.test/bpf/collections/improver-percentiles-spot-global/locations/loc%2B1%2Fpart"),
+                        new Expected(
+                                "metoffice_bpf_forecast",
+                                client -> client.bpfForecast(
+                                        new BpfForecastRequest("improver-percentiles-spot-global", "loc+1/part")))));
     }
 
     private static Stream<Arguments> invalidCases() {
         return Stream.of(
                 Arguments.of(
+                        "invalid latitude",
+                        (Function<SiteSpecificDataHubClient, MetOfficeToolResponse>)
+                                client -> client.globalSpot(new GlobalSpotRequest(91.0, -0.1, "hourly", null, null))),
+                Arguments.of(
+                        "invalid longitude",
+                        (Function<SiteSpecificDataHubClient, MetOfficeToolResponse>)
+                                client -> client.globalSpot(new GlobalSpotRequest(51.5, Double.NaN, "hourly", null, null))),
+                Arguments.of(
+                        "blank timestep",
+                        (Function<SiteSpecificDataHubClient, MetOfficeToolResponse>)
+                                client -> client.globalSpot(new GlobalSpotRequest(51.5, -0.1, "", null, null))),
+                Arguments.of(
                         "invalid timestep",
                         (Function<SiteSpecificDataHubClient, MetOfficeToolResponse>)
                                 client -> client.globalSpot(new GlobalSpotRequest(51.5, -0.1, "weekly", null, null))),
                 Arguments.of(
+                        "blank locations collection",
+                        (Function<SiteSpecificDataHubClient, MetOfficeToolResponse>)
+                                client -> client.bpfLocations(new BpfLocationsRequest(" "))),
+                Arguments.of(
                         "invalid locations collection",
                         (Function<SiteSpecificDataHubClient, MetOfficeToolResponse>)
                                 client -> client.bpfLocations(new BpfLocationsRequest("invalid"))),
+                Arguments.of(
+                        "blank forecast location",
+                        (Function<SiteSpecificDataHubClient, MetOfficeToolResponse>)
+                                client -> client.bpfForecast(
+                                        new BpfForecastRequest("improver-percentiles-spot-global", " "))),
                 Arguments.of(
                         "invalid forecast collection",
                         (Function<SiteSpecificDataHubClient, MetOfficeToolResponse>)

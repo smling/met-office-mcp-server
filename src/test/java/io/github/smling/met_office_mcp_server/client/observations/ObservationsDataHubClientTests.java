@@ -54,6 +54,20 @@ class ObservationsDataHubClientTests {
         server.verify();
     }
 
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("invalidCases")
+    void invalidRequestsReturnValidationErrorWithoutHttpCall(
+            String name, Function<ObservationsDataHubClient, MetOfficeToolResponse> call) {
+        MetOfficeToolResponse response = call.apply(client);
+
+        assertEquals(400, response.status());
+        assertEquals("observations", response.product());
+        assertNotNull(response.error());
+        assertNull(response.data());
+        assertNull(response.binaryBase64());
+        server.verify();
+    }
+
     private static Stream<Arguments> happyCases() {
         return Stream.of(
                 Arguments.of(
@@ -69,11 +83,45 @@ class ObservationsDataHubClientTests {
                                 "metoffice_observations_by_geohash",
                                 client -> client.byGeohash(new ObservationsByGeohashRequest("gcj8ds")))),
                 Arguments.of(
+                        "by uppercase geohash",
+                        URI.create("https://example.test/observations/GCJ8DS"),
+                        new Expected(
+                                "metoffice_observations_by_geohash",
+                                client -> client.byGeohash(new ObservationsByGeohashRequest("GCJ8DS")))),
+                Arguments.of(
                         "by location",
                         URI.create("https://example.test/observations/nearest?lat=51.5&lon=-0.1"),
                         new Expected(
                                 "metoffice_observations_by_location",
                                 client -> client.byLocation(new ObservationsByLocationRequest(51.5, -0.1)))));
+    }
+
+    private static Stream<Arguments> invalidCases() {
+        return Stream.of(
+                Arguments.of(
+                        "invalid nearest latitude",
+                        (Function<ObservationsDataHubClient, MetOfficeToolResponse>)
+                                client -> client.nearestStation(new NearestStationRequest(Double.NaN, -0.1))),
+                Arguments.of(
+                        "invalid nearest longitude",
+                        (Function<ObservationsDataHubClient, MetOfficeToolResponse>)
+                                client -> client.nearestStation(new NearestStationRequest(51.5, 181.0))),
+                Arguments.of(
+                        "blank geohash",
+                        (Function<ObservationsDataHubClient, MetOfficeToolResponse>)
+                                client -> client.byGeohash(new ObservationsByGeohashRequest(" "))),
+                Arguments.of(
+                        "short geohash",
+                        (Function<ObservationsDataHubClient, MetOfficeToolResponse>)
+                                client -> client.byGeohash(new ObservationsByGeohashRequest("gcj8d"))),
+                Arguments.of(
+                        "invalid geohash character",
+                        (Function<ObservationsDataHubClient, MetOfficeToolResponse>)
+                                client -> client.byGeohash(new ObservationsByGeohashRequest("gcj8io"))),
+                Arguments.of(
+                        "invalid by-location longitude",
+                        (Function<ObservationsDataHubClient, MetOfficeToolResponse>)
+                                client -> client.byLocation(new ObservationsByLocationRequest(51.5, Double.POSITIVE_INFINITY))));
     }
 
     private record Expected(String operation, Function<ObservationsDataHubClient, MetOfficeToolResponse> call) {

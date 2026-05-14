@@ -93,6 +93,27 @@ class MetOfficeDataHubClientTests {
     }
 
     @Test
+    void getBinaryDebugReturnsExactLengthAndPreviewForShortPayload() {
+        URI uri = URI.create("https://example.test/file");
+        byte[] body = "a".getBytes();
+        server.expect(once(), requestTo(uri))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("apikey", "key"))
+                .andRespond(withSuccess(body, MediaType.IMAGE_PNG));
+
+        MetOfficeToolResponse response =
+                client.getBinary(MetOfficeProduct.MAP_IMAGES, "operation", uri, "key", MediaType.IMAGE_PNG, true);
+
+        assertEquals(200, response.status());
+        assertNull(response.binaryBase64());
+        assertEquals(1, response.data().get("byteLength").asInt());
+        assertEquals(4, response.data().get("base64Length").asInt());
+        assertEquals("YQ==", response.data().get("base64Preview").asText());
+        assertNull(response.data().get("binaryBase64").stringValue());
+        server.verify();
+    }
+
+    @Test
     void encodedPathSegmentEscapesReservedCharacters() {
         URI uri = client.uri(
                 "https://example.test/base",

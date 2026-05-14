@@ -24,8 +24,8 @@ public class SiteSpecificTools {
     /**
      * Gets a Global Spot forecast for a latitude and longitude.
      *
-     * @param latitude latitude in decimal degrees
-     * @param longitude longitude in decimal degrees
+     * @param latitude latitude in decimal degrees, between -90 and 90
+     * @param longitude longitude in decimal degrees, between -180 and 180
      * @param timesteps forecast timestep, one of hourly, three-hourly, or daily
      * @param excludeParameterMetadata whether to exclude parameter metadata
      * @param includeLocationName whether to include location name
@@ -35,8 +35,10 @@ public class SiteSpecificTools {
             name = "metoffice_site_specific_global_spot",
             description = "Get Met Office Global Spot site-specific forecast GeoJSON for a latitude and longitude.")
     public MetOfficeToolResponse globalSpot(
-            @McpToolParam(description = "Latitude in decimal degrees.", required = true) double latitude,
-            @McpToolParam(description = "Longitude in decimal degrees.", required = true) double longitude,
+            @McpToolParam(description = "Latitude in decimal degrees, between -90 and 90.", required = true)
+                    double latitude,
+            @McpToolParam(description = "Longitude in decimal degrees, between -180 and 180.", required = true)
+                    double longitude,
             @McpToolParam(description = "Forecast timestep: hourly, three-hourly, or daily.", required = true)
                     String timesteps,
             @McpToolParam(description = "Whether to exclude parameter metadata.", required = false)

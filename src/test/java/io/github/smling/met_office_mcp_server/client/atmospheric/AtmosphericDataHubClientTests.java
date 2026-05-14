@@ -53,6 +53,20 @@ class AtmosphericDataHubClientTests {
         server.verify();
     }
 
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("invalidCases")
+    void invalidRequestsReturnValidationErrorWithoutHttpCall(
+            String name, Function<AtmosphericDataHubClient, MetOfficeToolResponse> call) {
+        MetOfficeToolResponse response = call.apply(client);
+
+        assertEquals(400, response.status());
+        assertEquals("atmospheric", response.product());
+        assertNotNull(response.error());
+        assertNull(response.data());
+        assertNull(response.binaryBase64());
+        server.verify();
+    }
+
     private static Stream<Arguments> happyCases() {
         return Stream.of(
                 Arguments.of(
@@ -69,6 +83,15 @@ class AtmosphericDataHubClientTests {
                         Expected.json(
                                 "metoffice_atmospheric_latest_order",
                                 client -> client.latestOrder(new AtmosphericOrdersRequest("order-1", "00", "1.0")),
+                                "latest")),
+                Arguments.of(
+                        "latest order with reserved path characters",
+                        URI.create("https://example.test/atmos/orders/order%2B1%2Fpart/latest?dataSpec=1.0&runfilter=00&detail=MINIMAL"),
+                        MediaType.APPLICATION_JSON,
+                        bytes("{\"latest\":\"atm\"}"),
+                        Expected.json(
+                                "metoffice_atmospheric_latest_order",
+                                client -> client.latestOrder(new AtmosphericOrdersRequest("order+1/part", "00", "1.0")),
                                 "latest")),
                 Arguments.of(
                         "file",
@@ -88,6 +111,22 @@ class AtmosphericDataHubClientTests {
                                 "metoffice_atmospheric_file",
                                 client -> client.file(new AtmosphericFileRequest("order-1", null, "1.0", "a+b/c?d")),
                                 "Z3JpYg==")));
+    }
+
+    private static Stream<Arguments> invalidCases() {
+        return Stream.of(
+                Arguments.of(
+                        "blank latest order id",
+                        (Function<AtmosphericDataHubClient, MetOfficeToolResponse>)
+                                client -> client.latestOrder(new AtmosphericOrdersRequest(" ", "00", "1.0"))),
+                Arguments.of(
+                        "blank file order id",
+                        (Function<AtmosphericDataHubClient, MetOfficeToolResponse>)
+                                client -> client.file(new AtmosphericFileRequest(" ", null, "1.0", "file-1"))),
+                Arguments.of(
+                        "blank file id",
+                        (Function<AtmosphericDataHubClient, MetOfficeToolResponse>)
+                                client -> client.file(new AtmosphericFileRequest("order-1", null, "1.0", ""))));
     }
 
     private static byte[] bytes(String value) {

@@ -1,6 +1,7 @@
 package io.github.smling.met_office_mcp_server.client.sitespecific;
 
 import io.github.smling.met_office_mcp_server.MetOfficeProperties;
+import io.github.smling.met_office_mcp_server.client.MetOfficeClientValidation;
 import io.github.smling.met_office_mcp_server.client.MetOfficeDataHubClient;
 import io.github.smling.met_office_mcp_server.model.MetOfficeProduct;
 import io.github.smling.met_office_mcp_server.model.MetOfficeToolResponse;
@@ -39,8 +40,21 @@ public class SiteSpecificDataHubClient {
     }
 
     public MetOfficeToolResponse globalSpot(GlobalSpotRequest request) {
+        MetOfficeToolResponse validation = MetOfficeClientValidation.coordinates(
+                MetOfficeProduct.SITE_SPECIFIC, GLOBAL_SPOT, request.latitude(), request.longitude());
+        if (validation != null) {
+            return validation;
+        }
+        validation = MetOfficeClientValidation.requiredString(
+                MetOfficeProduct.SITE_SPECIFIC, GLOBAL_SPOT, "timesteps", request.timesteps());
+        if (validation != null) {
+            return validation;
+        }
         if (!GLOBAL_SPOT_TIMESTEPS.contains(request.timesteps())) {
-            return validationError(GLOBAL_SPOT, "timesteps must be one of hourly, three-hourly, or daily");
+            return MetOfficeClientValidation.validationError(
+                    MetOfficeProduct.SITE_SPECIFIC,
+                    GLOBAL_SPOT,
+                    "timesteps must be one of hourly, three-hourly, or daily");
         }
         URI uri = client.uri(
                 properties.globalSpotBaseUrl(),
@@ -62,7 +76,9 @@ public class SiteSpecificDataHubClient {
         if (validation != null) {
             return validation;
         }
-        URI uri = client.uri(properties.bpfBaseUrl(), "/collections/" + request.collectionId() + "/locations");
+        URI uri = client.uri(
+                properties.bpfBaseUrl(),
+                "/collections/" + client.encodedPathSegment(request.collectionId()) + "/locations");
         return client.getJson(MetOfficeProduct.SITE_SPECIFIC, BPF_LOCATIONS, uri, apiKey);
     }
 
@@ -71,23 +87,30 @@ public class SiteSpecificDataHubClient {
         if (validation != null) {
             return validation;
         }
+        validation = MetOfficeClientValidation.requiredString(
+                MetOfficeProduct.SITE_SPECIFIC, BPF_FORECAST, "locationId", request.locationId());
+        if (validation != null) {
+            return validation;
+        }
         URI uri = client.uri(
                 properties.bpfBaseUrl(),
-                "/collections/" + request.collectionId() + "/locations/" + request.locationId());
+                "/collections/" + client.encodedPathSegment(request.collectionId()) + "/locations/"
+                        + client.encodedPathSegment(request.locationId()));
         return client.getJson(MetOfficeProduct.SITE_SPECIFIC, BPF_FORECAST, uri, apiKey);
     }
 
     private MetOfficeToolResponse validateBpfCollection(String operation, String collectionId) {
+        MetOfficeToolResponse validation = MetOfficeClientValidation.requiredString(
+                MetOfficeProduct.SITE_SPECIFIC, operation, "collectionId", collectionId);
+        if (validation != null) {
+            return validation;
+        }
         if (!BPF_COLLECTION_IDS.contains(collectionId)) {
-            return validationError(operation, "collectionId must be one of " + String.join(", ", BPF_COLLECTION_IDS));
+            return MetOfficeClientValidation.validationError(
+                    MetOfficeProduct.SITE_SPECIFIC,
+                    operation,
+                    "collectionId must be one of " + String.join(", ", BPF_COLLECTION_IDS));
         }
         return null;
-    }
-
-    private MetOfficeToolResponse validationError(String operation, String message) {
-        return MetOfficeToolResponse.error(
-                MetOfficeProduct.SITE_SPECIFIC,
-                operation,
-                new MetOfficeToolResponse.MetOfficeError(message, 400, MetOfficeProduct.SITE_SPECIFIC.id(), null, null));
     }
 }

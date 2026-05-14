@@ -30,6 +30,7 @@
 - Disabled OTLP metrics export by default through `MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED:false` so local and Compose runs do not warn when no collector is listening on `localhost:4318`; the Compose file sets the same default and documents the opt-in settings.
 - Corrected Land Observations DataHub routing to use `/nearest` for latitude/longitude requests and `/{geohash}` for station geohash requests. Updated observations tool descriptions and URI/container expectations. Verified with `.\gradlew.bat test`.
 - Encoded atmospheric and map image binary download order/file IDs as path segments so reserved characters such as `+` are preserved correctly. Added opt-in `binaryDebug` mode for GRIB and PNG download tools so callers can inspect byte length, base64 length, and a short base64 preview without returning the full binary payload. Aligned observation tests with the current `lat`/`lon` query names in the dirty worktree. Verified with `.\gradlew.bat test`.
+- Added shared local validation for MCP client inputs, including required order/file/collection/location IDs, coordinate bounds, finite coordinate checks, and six-character station geohashes. Encoded remaining dynamic DataHub path segments for latest-order, BPF forecast location, and observation geohash calls. Optimized binary debug responses so they calculate metadata and preview without producing the full base64 payload. Verified with `.\gradlew.bat test`.
 
 ## Follow-Up Notes
 

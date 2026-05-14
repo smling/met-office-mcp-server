@@ -1,6 +1,7 @@
 package io.github.smling.met_office_mcp_server.client.atmospheric;
 
 import io.github.smling.met_office_mcp_server.MetOfficeProperties;
+import io.github.smling.met_office_mcp_server.client.MetOfficeClientValidation;
 import io.github.smling.met_office_mcp_server.client.MetOfficeDataHubClient;
 import io.github.smling.met_office_mcp_server.model.MetOfficeProduct;
 import io.github.smling.met_office_mcp_server.model.MetOfficeToolResponse;
@@ -36,9 +37,14 @@ public class AtmosphericDataHubClient {
     }
 
     public MetOfficeToolResponse latestOrder(AtmosphericOrdersRequest request) {
+        MetOfficeToolResponse validation = MetOfficeClientValidation.requiredString(
+                MetOfficeProduct.ATMOSPHERIC, LATEST_ORDER, "orderId", request.orderId());
+        if (validation != null) {
+            return validation;
+        }
         URI uri = client.uri(
                 properties.baseUrl(),
-                "/orders/" + request.orderId() + "/latest",
+                "/orders/" + client.encodedPathSegment(request.orderId()) + "/latest",
                 client.query("dataSpec", request.dataSpec()),
                 client.query("runfilter", request.run()),
                 client.query("detail", "MINIMAL"));
@@ -46,6 +52,16 @@ public class AtmosphericDataHubClient {
     }
 
     public MetOfficeToolResponse file(AtmosphericFileRequest request) {
+        MetOfficeToolResponse validation = MetOfficeClientValidation.requiredString(
+                MetOfficeProduct.ATMOSPHERIC, FILE, "orderId", request.orderId());
+        if (validation != null) {
+            return validation;
+        }
+        validation = MetOfficeClientValidation.requiredString(
+                MetOfficeProduct.ATMOSPHERIC, FILE, "fileId", request.fileId());
+        if (validation != null) {
+            return validation;
+        }
         URI uri = client.uri(
                 properties.baseUrl(),
                 "/orders/" + client.encodedPathSegment(request.orderId()) + "/latest/"

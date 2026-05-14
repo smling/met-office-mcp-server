@@ -132,11 +132,11 @@ public class MetOfficeDataHubClient {
                 JsonNode data = body.length == 0 ? objectMapper.createObjectNode() : objectMapper.readTree(body);
                 return MetOfficeToolResponse.json(product, operation, status, contentType, data);
             }
-            String binaryBase64 = Base64.getEncoder().encodeToString(body);
             if (binaryDebug) {
                 return MetOfficeToolResponse.binaryDebug(
-                        product, operation, status, contentType, binaryDebugData(body.length, binaryBase64));
+                        product, operation, status, contentType, binaryDebugData(body));
             }
+            String binaryBase64 = Base64.getEncoder().encodeToString(body);
             return MetOfficeToolResponse.binary(product, operation, status, contentType, binaryBase64);
         } catch (RuntimeException ex) {
             return MetOfficeToolResponse.error(
@@ -151,13 +151,29 @@ public class MetOfficeDataHubClient {
         }
     }
 
-    private JsonNode binaryDebugData(int byteLength, String binaryBase64) {
+    private JsonNode binaryDebugData(byte[] body) {
         var data = objectMapper.createObjectNode();
-        data.put("byteLength", byteLength);
-        data.put("base64Length", binaryBase64.length());
-        data.put("base64Preview", binaryBase64.substring(0, Math.min(BINARY_PREVIEW_LENGTH, binaryBase64.length())));
+        data.put("byteLength", body.length);
+        data.put("base64Length", base64Length(body.length));
+        data.put("base64Preview", base64Preview(body));
         data.putNull("binaryBase64");
         return data;
+    }
+
+    private long base64Length(int byteLength) {
+        return ((byteLength + 2L) / 3) * 4;
+    }
+
+    private String base64Preview(byte[] body) {
+        int previewLength = (int) Math.min(BINARY_PREVIEW_LENGTH, base64Length(body.length));
+        if (previewLength == 0) {
+            return "";
+        }
+        int previewBytes = Math.min(body.length, ((previewLength + 3) / 4) * 3);
+        byte[] previewBody = new byte[previewBytes];
+        System.arraycopy(body, 0, previewBody, 0, previewBytes);
+        String encodedPreview = Base64.getEncoder().encodeToString(previewBody);
+        return encodedPreview.substring(0, Math.min(previewLength, encodedPreview.length()));
     }
 
     private String contentType(HttpHeaders headers) {

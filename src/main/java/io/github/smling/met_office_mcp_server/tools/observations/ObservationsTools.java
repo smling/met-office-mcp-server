@@ -24,16 +24,18 @@ public class ObservationsTools {
     /**
      * Gets recent Land Observations for the nearest station to a latitude and longitude.
      *
-     * @param latitude latitude in decimal degrees
-     * @param longitude longitude in decimal degrees
+     * @param latitude latitude in decimal degrees, between -90 and 90
+     * @param longitude longitude in decimal degrees, between -180 and 180
      * @return response envelope containing observation JSON or a typed error
      */
     @McpTool(
             name = "metoffice_observations_nearest_station",
             description = "Get recent Met Office Land Observations for the nearest station to a latitude and longitude.")
     public MetOfficeToolResponse observationsNearestStation(
-            @McpToolParam(description = "Latitude in decimal degrees.", required = true) double latitude,
-            @McpToolParam(description = "Longitude in decimal degrees.", required = true) double longitude) {
+            @McpToolParam(description = "Latitude in decimal degrees, between -90 and 90.", required = true)
+                    double latitude,
+            @McpToolParam(description = "Longitude in decimal degrees, between -180 and 180.", required = true)
+                    double longitude) {
         return observationsClient.nearestStation(new NearestStationRequest(latitude, longitude));
     }
 
@@ -54,16 +56,18 @@ public class ObservationsTools {
     /**
      * Gets recent Land Observations for the nearest station to a latitude and longitude.
      *
-     * @param latitude latitude in decimal degrees
-     * @param longitude longitude in decimal degrees
+     * @param latitude latitude in decimal degrees, between -90 and 90
+     * @param longitude longitude in decimal degrees, between -180 and 180
      * @return response envelope containing observation JSON or a typed error
      */
     @McpTool(
             name = "metoffice_observations_by_location",
             description = "Get recent Met Office Land Observations for the nearest station to a latitude and longitude.")
     public MetOfficeToolResponse observationsByLocation(
-            @McpToolParam(description = "Latitude in decimal degrees.", required = true) double latitude,
-            @McpToolParam(description = "Longitude in decimal degrees.", required = true) double longitude) {
+            @McpToolParam(description = "Latitude in decimal degrees, between -90 and 90.", required = true)
+                    double latitude,
+            @McpToolParam(description = "Longitude in decimal degrees, between -180 and 180.", required = true)
+                    double longitude) {
         return observationsClient.byLocation(new ObservationsByLocationRequest(latitude, longitude));
     }
 }
