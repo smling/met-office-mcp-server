@@ -24,7 +24,7 @@ met-office:
     bpf-base-url: ${MET_OFFICE_SITE_SPECIFIC_BPF_BASE_URL:https://data.hub.api.metoffice.gov.uk/mo-site-specific-blended-probabilistic-forecast/1.0.0}
   observations:
     api-key: ${MET_OFFICE_OBSERVATIONS_API_KEY:}
-    base-url: ${MET_OFFICE_OBSERVATIONS_BASE_URL:https://data.hub.api.metoffice.gov.uk/observations/1.0.0}
+    base-url: ${MET_OFFICE_OBSERVATIONS_BASE_URL:https://data.hub.api.metoffice.gov.uk/observation-land/1}
   map-images:
     api-key: ${MET_OFFICE_MAP_IMAGES_API_KEY:}
     base-url: ${MET_OFFICE_MAP_IMAGES_BASE_URL:https://data.hub.api.metoffice.gov.uk/map-images/1.0.0}

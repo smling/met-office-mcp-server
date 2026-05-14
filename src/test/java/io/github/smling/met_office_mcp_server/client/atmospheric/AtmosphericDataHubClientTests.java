@@ -78,6 +78,15 @@ class AtmosphericDataHubClientTests {
                         Expected.binary(
                                 "metoffice_atmospheric_file",
                                 client -> client.file(new AtmosphericFileRequest("order-1", null, "1.0", "file-1")),
+                                "Z3JpYg==")),
+                Arguments.of(
+                        "file with reserved path characters",
+                        URI.create("https://example.test/atmos/orders/order-1/latest/a%2Bb%2Fc%3Fd/data?dataSpec=1.0"),
+                        MediaType.parseMediaType("application/x-grib"),
+                        "grib".getBytes(),
+                        Expected.binary(
+                                "metoffice_atmospheric_file",
+                                client -> client.file(new AtmosphericFileRequest("order-1", null, "1.0", "a+b/c?d")),
                                 "Z3JpYg==")));
     }
 

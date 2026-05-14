@@ -48,9 +48,15 @@ public class AtmosphericDataHubClient {
     public MetOfficeToolResponse file(AtmosphericFileRequest request) {
         URI uri = client.uri(
                 properties.baseUrl(),
-                "/orders/" + request.orderId() + "/latest/" + request.fileId() + "/data",
+                "/orders/" + client.encodedPathSegment(request.orderId()) + "/latest/"
+                        + client.encodedPathSegment(request.fileId()) + "/data",
                 client.query("dataSpec", request.dataSpec()));
         return client.getBinary(
-                MetOfficeProduct.ATMOSPHERIC, FILE, uri, apiKey, MediaType.parseMediaType("application/x-grib"));
+                MetOfficeProduct.ATMOSPHERIC,
+                FILE,
+                uri,
+                apiKey,
+                MediaType.parseMediaType("application/x-grib"),
+                Boolean.TRUE.equals(request.binaryDebug()));
     }
 }

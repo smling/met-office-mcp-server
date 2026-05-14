@@ -78,6 +78,17 @@ class MapImagesDataHubClientTests {
                         Expected.binary(
                                 "metoffice_map_image_file",
                                 client -> client.file(new MapImageFileRequest("map-order", null, "map-file", false)),
+                                "cG5n")),
+                Arguments.of(
+                        "file with reserved path character",
+                        URI.create(
+                                "https://example.test/map/orders/map-order/latest/cloud_amount_total_ts0_%2B00/data?includeLand=false"),
+                        MediaType.IMAGE_PNG,
+                        "png".getBytes(),
+                        Expected.binary(
+                                "metoffice_map_image_file",
+                                client -> client.file(new MapImageFileRequest(
+                                        "map-order", null, "cloud_amount_total_ts0_+00", false)),
                                 "cG5n")));
     }
 

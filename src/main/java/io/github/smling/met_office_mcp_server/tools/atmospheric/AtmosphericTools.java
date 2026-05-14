@@ -57,7 +57,8 @@ public class AtmosphericTools {
      * @param run optional model run filter retained for client context
      * @param dataSpec optional atmospheric data specification version
      * @param fileId file ID from latest order metadata
-     * @return response envelope containing base64 GRIB bytes or a typed error
+     * @param binaryDebug when true, return compact binary diagnostics instead of full base64
+     * @return response envelope containing base64 GRIB bytes, binary diagnostics, or a typed error
      */
     @McpTool(
             name = "metoffice_atmospheric_file",
@@ -66,7 +67,12 @@ public class AtmosphericTools {
             @McpToolParam(description = "Atmospheric order ID.", required = true) String orderId,
             @McpToolParam(description = "Optional model run filter retained for client context.", required = false) String run,
             @McpToolParam(description = "Optional atmospheric data specification version.", required = false) String dataSpec,
-            @McpToolParam(description = "File ID from the latest order metadata.", required = true) String fileId) {
-        return atmosphericClient.file(new AtmosphericFileRequest(orderId, run, dataSpec, fileId));
+            @McpToolParam(description = "File ID from the latest order metadata.", required = true) String fileId,
+            @McpToolParam(
+                            description =
+                                    "When true, return byte length and base64 preview instead of the full binary payload.",
+                            required = false)
+                    Boolean binaryDebug) {
+        return atmosphericClient.file(new AtmosphericFileRequest(orderId, run, dataSpec, fileId, binaryDebug));
     }
 }

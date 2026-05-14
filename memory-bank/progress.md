@@ -28,8 +28,9 @@
 - Added a GraalVM runtime hint for Spring AI MCP `DefaultMetaProvider` so native images can instantiate the default MCP annotation metadata provider reflectively at startup. Verified with `.\gradlew.bat test`, `.\gradlew.bat processAot`, a full native `bootBuildImage`, and a native container startup smoke test.
 - Added GraalVM reflection hints for `MetOfficeToolResponse` and nested `MetOfficeError` record component accessors so native images can serialize MCP tool responses. Verified with `.\gradlew.bat test`, `.\gradlew.bat processAot`, a full native `bootBuildImage`, and a native MCP `tools/call` smoke test against the local container.
 - Disabled OTLP metrics export by default through `MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED:false` so local and Compose runs do not warn when no collector is listening on `localhost:4318`; the Compose file sets the same default and documents the opt-in settings.
+- Corrected Land Observations DataHub routing to use `/nearest` for latitude/longitude requests and `/{geohash}` for station geohash requests. Updated observations tool descriptions and URI/container expectations. Verified with `.\gradlew.bat test`.
+- Encoded atmospheric and map image binary download order/file IDs as path segments so reserved characters such as `+` are preserved correctly. Added opt-in `binaryDebug` mode for GRIB and PNG download tools so callers can inspect byte length, base64 length, and a short base64 preview without returning the full binary payload. Aligned observation tests with the current `lat`/`lon` query names in the dirty worktree. Verified with `.\gradlew.bat test`.
 
 ## Follow-Up Notes
 
-- The observations base URL is configurable because the public Met Office docs page did not expose all concrete paths in static HTML during implementation.
-- When changing tool paths or query parameters, update focused tests in `MetOfficeToolsTests`.
+- When changing tool paths or query parameters, update the focused product client tests and `MetOfficeToolsContainerTests`.

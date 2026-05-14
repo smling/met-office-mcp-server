@@ -180,14 +180,19 @@ MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED=false
 | Site-specific | `metoffice_bpf_collections` | List BPF forecast collections. |
 | Site-specific | `metoffice_bpf_locations` | List locations for a BPF collection. |
 | Site-specific | `metoffice_bpf_forecast` | Get BPF forecast JSON for a collection and location. |
-| Observations | `metoffice_observations_nearest_station` | Find the nearest Land Observations station geohash. |
+| Observations | `metoffice_observations_nearest_station` | Get recent Land Observations for the nearest station to latitude and longitude. |
 | Observations | `metoffice_observations_by_geohash` | Get recent Land Observations for a station geohash. |
 | Observations | `metoffice_observations_by_location` | Get recent Land Observations for the nearest station to latitude and longitude. |
 | Map images | `metoffice_map_image_orders` | List active map image orders. |
 | Map images | `metoffice_map_image_latest_order` | Get latest metadata for a map image order. |
 | Map images | `metoffice_map_image_file` | Download a PNG map image file as base64. |
 
-Binary responses, such as GRIB and PNG files, are returned as base64 strings inside the normal tool response envelope.
+Binary responses, such as GRIB and PNG files, are returned as base64 strings inside the normal tool response envelope. The binary download tools also accept optional `binaryDebug=true`; in that mode the response keeps `binaryBase64` empty and returns compact diagnostics in `data`, including byte length, base64 length, and the first 80 base64 characters.
+
+Operational notes:
+
+- `403 Forbidden` responses from BPF forecast calls usually indicate Met Office DataHub entitlement or API key configuration for that product, not a retryable client-side parsing issue.
+- If an MCP host blocks a tool call before this server receives it, that is upstream host or tool-safety-layer behavior. Check the host transcript/logs before changing this server.
 
 ## 🧪 Testing
 

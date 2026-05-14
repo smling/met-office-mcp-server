@@ -33,23 +33,23 @@ public class ObservationsDataHubClient {
     public MetOfficeToolResponse nearestStation(NearestStationRequest request) {
         URI uri = client.uri(
                 properties.baseUrl(),
-                "/nearest-geohash",
-                client.query("latitude", request.latitude()),
-                client.query("longitude", request.longitude()));
+                "/nearest",
+                client.query("lat", request.latitude()),
+                client.query("lon", request.longitude()));
         return client.getJson(MetOfficeProduct.OBSERVATIONS, NEAREST_STATION, uri, apiKey);
     }
 
     public MetOfficeToolResponse byGeohash(ObservationsByGeohashRequest request) {
-        URI uri = client.uri(properties.baseUrl(), "/observations/" + request.geohash());
+        URI uri = client.uri(properties.baseUrl(), "/" + request.geohash());
         return client.getJson(MetOfficeProduct.OBSERVATIONS, BY_GEOHASH, uri, apiKey);
     }
 
     public MetOfficeToolResponse byLocation(ObservationsByLocationRequest request) {
         URI uri = client.uri(
                 properties.baseUrl(),
-                "/observations",
-                client.query("latitude", request.latitude()),
-                client.query("longitude", request.longitude()));
+                "/nearest",
+                client.query("lat", request.latitude()),
+                client.query("lon", request.longitude()));
         return client.getJson(MetOfficeProduct.OBSERVATIONS, BY_LOCATION, uri, apiKey);
     }
 }

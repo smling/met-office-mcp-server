@@ -21,6 +21,7 @@ import tools.jackson.databind.ObjectMapper;
 public class MetOfficeDataHubClient {
 
     private static final int ERROR_PREVIEW_LENGTH = 2_000;
+    private static final int BINARY_PREVIEW_LENGTH = 80;
 
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
@@ -36,7 +37,17 @@ public class MetOfficeDataHubClient {
 
     public MetOfficeToolResponse getBinary(
             MetOfficeProduct product, String operation, URI uri, String apiKey, MediaType accept) {
-        return get(product, operation, uri, apiKey, accept, false);
+        return getBinary(product, operation, uri, apiKey, accept, false);
+    }
+
+    public MetOfficeToolResponse getBinary(
+            MetOfficeProduct product,
+            String operation,
+            URI uri,
+            String apiKey,
+            MediaType accept,
+            boolean binaryDebug) {
+        return get(product, operation, uri, apiKey, accept, false, binaryDebug);
     }
 
     public URI uri(String baseUrl, String path, QueryParameter... queryParameters) {
@@ -46,7 +57,22 @@ public class MetOfficeDataHubClient {
                 builder.queryParam(queryParameter.name(), queryParameter.value());
             }
         }
-        return builder.build().toUri();
+        return URI.create(builder.build().toUriString());
+    }
+
+    public String encodedPathSegment(String value) {
+        StringBuilder encoded = new StringBuilder();
+        for (byte valueByte : value.getBytes(StandardCharsets.UTF_8)) {
+            int unsignedByte = valueByte & 0xff;
+            if (isUnreserved(unsignedByte)) {
+                encoded.append((char) unsignedByte);
+            } else {
+                encoded.append('%');
+                encoded.append(Character.toUpperCase(Character.forDigit(unsignedByte >> 4, 16)));
+                encoded.append(Character.toUpperCase(Character.forDigit(unsignedByte & 0xf, 16)));
+            }
+        }
+        return encoded.toString();
     }
 
     public QueryParameter query(String name, Object value) {
@@ -55,6 +81,17 @@ public class MetOfficeDataHubClient {
 
     private MetOfficeToolResponse get(
             MetOfficeProduct product, String operation, URI uri, String apiKey, MediaType accept, boolean jsonResponse) {
+        return get(product, operation, uri, apiKey, accept, jsonResponse, false);
+    }
+
+    private MetOfficeToolResponse get(
+            MetOfficeProduct product,
+            String operation,
+            URI uri,
+            String apiKey,
+            MediaType accept,
+            boolean jsonResponse,
+            boolean binaryDebug) {
         if (apiKey == null || apiKey.isBlank()) {
             return MetOfficeToolResponse.error(
                     product,
@@ -95,8 +132,12 @@ public class MetOfficeDataHubClient {
                 JsonNode data = body.length == 0 ? objectMapper.createObjectNode() : objectMapper.readTree(body);
                 return MetOfficeToolResponse.json(product, operation, status, contentType, data);
             }
-            return MetOfficeToolResponse.binary(
-                    product, operation, status, contentType, Base64.getEncoder().encodeToString(body));
+            String binaryBase64 = Base64.getEncoder().encodeToString(body);
+            if (binaryDebug) {
+                return MetOfficeToolResponse.binaryDebug(
+                        product, operation, status, contentType, binaryDebugData(body.length, binaryBase64));
+            }
+            return MetOfficeToolResponse.binary(product, operation, status, contentType, binaryBase64);
         } catch (RuntimeException ex) {
             return MetOfficeToolResponse.error(
                     product,
@@ -110,6 +151,15 @@ public class MetOfficeDataHubClient {
         }
     }
 
+    private JsonNode binaryDebugData(int byteLength, String binaryBase64) {
+        var data = objectMapper.createObjectNode();
+        data.put("byteLength", byteLength);
+        data.put("base64Length", binaryBase64.length());
+        data.put("base64Preview", binaryBase64.substring(0, Math.min(BINARY_PREVIEW_LENGTH, binaryBase64.length())));
+        data.putNull("binaryBase64");
+        return data;
+    }
+
     private String contentType(HttpHeaders headers) {
         MediaType contentType = headers.getContentType();
         return contentType == null ? null : contentType.toString();
@@ -121,6 +171,16 @@ public class MetOfficeDataHubClient {
             return value;
         }
         return value.substring(0, ERROR_PREVIEW_LENGTH);
+    }
+
+    private boolean isUnreserved(int value) {
+        return (value >= 'A' && value <= 'Z')
+                || (value >= 'a' && value <= 'z')
+                || (value >= '0' && value <= '9')
+                || value == '-'
+                || value == '.'
+                || value == '_'
+                || value == '~';
     }
 
     public record QueryParameter(String name, Object value) {

@@ -14,6 +14,10 @@ Met Office forecast, observation, and order metadata payloads are preserved as `
 
 Binary product downloads, such as GRIB and PNG responses, are returned as base64 strings in the same envelope.
 
+Binary file download tools also support opt-in `binaryDebug` mode. In that mode the response keeps the full `binaryBase64` payload null and returns compact diagnostics in `data` so MCP clients and transcripts can verify large binary downloads without carrying the full payload.
+
+Dynamic DataHub path segments that come from order or file metadata must be encoded as single path segments before URI construction. File IDs can contain reserved characters such as `+`, so product clients should use the shared transport helper instead of interpolating raw file IDs into download paths.
+
 ## Error Handling
 
 Non-2xx Met Office responses are converted to typed error envelopes containing product, operation, status, endpoint, and a bounded response body preview. Missing API keys are reported as local validation errors before any HTTP request is attempted.

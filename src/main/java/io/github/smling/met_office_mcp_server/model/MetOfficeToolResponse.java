@@ -21,6 +21,11 @@ public record MetOfficeToolResponse(
         return new MetOfficeToolResponse(product.id(), operation, status, contentType, null, binaryBase64, null);
     }
 
+    public static MetOfficeToolResponse binaryDebug(
+            MetOfficeProduct product, String operation, int status, String contentType, JsonNode data) {
+        return new MetOfficeToolResponse(product.id(), operation, status, contentType, data, null, null);
+    }
+
     public static MetOfficeToolResponse error(MetOfficeProduct product, String operation, MetOfficeError error) {
         return new MetOfficeToolResponse(product.id(), operation, error.status(), null, null, null, error);
     }

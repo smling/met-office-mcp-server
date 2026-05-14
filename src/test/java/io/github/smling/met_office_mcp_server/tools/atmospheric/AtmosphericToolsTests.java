@@ -46,9 +46,10 @@ class AtmosphericToolsTests {
         ArgumentCaptor<AtmosphericFileRequest> captor = ArgumentCaptor.forClass(AtmosphericFileRequest.class);
         when(client.file(captor.capture())).thenReturn(response);
 
-        assertSame(response, tools.atmosphericFile("order-1", "00", "1.0", "file-1"));
+        assertSame(response, tools.atmosphericFile("order-1", "00", "1.0", "file-1", true));
         assertEquals("order-1", captor.getValue().orderId());
         assertEquals("file-1", captor.getValue().fileId());
+        assertEquals(true, captor.getValue().binaryDebug());
     }
 
     private MetOfficeToolResponse ok(String operation) {

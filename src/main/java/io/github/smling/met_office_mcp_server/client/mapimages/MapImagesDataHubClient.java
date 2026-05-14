@@ -48,8 +48,15 @@ public class MapImagesDataHubClient {
     public MetOfficeToolResponse file(MapImageFileRequest request) {
         URI uri = client.uri(
                 properties.baseUrl(),
-                "/orders/" + request.orderId() + "/latest/" + request.fileId() + "/data",
+                "/orders/" + client.encodedPathSegment(request.orderId()) + "/latest/"
+                        + client.encodedPathSegment(request.fileId()) + "/data",
                 client.query("includeLand", request.includeLand()));
-        return client.getBinary(MetOfficeProduct.MAP_IMAGES, FILE, uri, apiKey, MediaType.IMAGE_PNG);
+        return client.getBinary(
+                MetOfficeProduct.MAP_IMAGES,
+                FILE,
+                uri,
+                apiKey,
+                MediaType.IMAGE_PNG,
+                Boolean.TRUE.equals(request.binaryDebug()));
     }
 }

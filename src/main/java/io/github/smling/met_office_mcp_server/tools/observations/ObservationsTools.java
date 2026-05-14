@@ -22,15 +22,15 @@ public class ObservationsTools {
     }
 
     /**
-     * Finds the nearest Land Observations station for a latitude and longitude.
+     * Gets recent Land Observations for the nearest station to a latitude and longitude.
      *
      * @param latitude latitude in decimal degrees
      * @param longitude longitude in decimal degrees
-     * @return response envelope containing station metadata or a typed error
+     * @return response envelope containing observation JSON or a typed error
      */
     @McpTool(
             name = "metoffice_observations_nearest_station",
-            description = "Find the nearest Met Office Land Observations station geohash for a latitude and longitude.")
+            description = "Get recent Met Office Land Observations for the nearest station to a latitude and longitude.")
     public MetOfficeToolResponse observationsNearestStation(
             @McpToolParam(description = "Latitude in decimal degrees.", required = true) double latitude,
             @McpToolParam(description = "Longitude in decimal degrees.", required = true) double longitude) {

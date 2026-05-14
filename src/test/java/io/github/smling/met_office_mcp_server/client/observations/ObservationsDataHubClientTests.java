@@ -58,19 +58,19 @@ class ObservationsDataHubClientTests {
         return Stream.of(
                 Arguments.of(
                         "nearest station",
-                        URI.create("https://example.test/observations/nearest-geohash?latitude=51.5&longitude=-0.1"),
+                        URI.create("https://example.test/observations/nearest?lat=51.5&lon=-0.1"),
                         new Expected(
                                 "metoffice_observations_nearest_station",
                                 client -> client.nearestStation(new NearestStationRequest(51.5, -0.1)))),
                 Arguments.of(
                         "by geohash",
-                        URI.create("https://example.test/observations/observations/gcj8ds"),
+                        URI.create("https://example.test/observations/gcj8ds"),
                         new Expected(
                                 "metoffice_observations_by_geohash",
                                 client -> client.byGeohash(new ObservationsByGeohashRequest("gcj8ds")))),
                 Arguments.of(
                         "by location",
-                        URI.create("https://example.test/observations/observations?latitude=51.5&longitude=-0.1"),
+                        URI.create("https://example.test/observations/nearest?lat=51.5&lon=-0.1"),
                         new Expected(
                                 "metoffice_observations_by_location",
                                 client -> client.byLocation(new ObservationsByLocationRequest(51.5, -0.1)))));

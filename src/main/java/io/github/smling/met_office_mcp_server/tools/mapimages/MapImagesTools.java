@@ -54,7 +54,8 @@ public class MapImagesTools {
      * @param run optional model run filter retained for client context
      * @param fileId file ID from latest order metadata
      * @param includeLand whether land map features should be included when supported
-     * @return response envelope containing base64 PNG bytes or a typed error
+     * @param binaryDebug when true, return compact binary diagnostics instead of full base64
+     * @return response envelope containing base64 PNG bytes, binary diagnostics, or a typed error
      */
     @McpTool(name = "metoffice_map_image_file", description = "Download a Met Office map image PNG file as base64.")
     public MetOfficeToolResponse mapImageFile(
@@ -62,7 +63,12 @@ public class MapImagesTools {
             @McpToolParam(description = "Optional model run filter retained for client context.", required = false) String run,
             @McpToolParam(description = "File ID from the latest order metadata.", required = true) String fileId,
             @McpToolParam(description = "Whether land map features should be included when supported.", required = false)
-                    Boolean includeLand) {
-        return mapImagesClient.file(new MapImageFileRequest(orderId, run, fileId, includeLand));
+                    Boolean includeLand,
+            @McpToolParam(
+                            description =
+                                    "When true, return byte length and base64 preview instead of the full binary payload.",
+                            required = false)
+                    Boolean binaryDebug) {
+        return mapImagesClient.file(new MapImageFileRequest(orderId, run, fileId, includeLand, binaryDebug));
     }
 }

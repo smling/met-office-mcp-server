@@ -142,7 +142,7 @@ class MetOfficeToolsContainerTests {
                                 .header("apikey", "atm-key"),
                         binary("application/x-grib", "grib".getBytes()),
                         Expected.binary("atmospheric", "metoffice_atmospheric_file",
-                                test -> test.atmosphericTools.atmosphericFile("order-1", null, "1.0", "file-1"),
+                                test -> test.atmosphericTools.atmosphericFile("order-1", null, "1.0", "file-1", false),
                                 "Z3JpYg==")),
                 Arguments.of(
                         "global spot",
@@ -178,25 +178,25 @@ class MetOfficeToolsContainerTests {
                                 "forecast")),
                 Arguments.of(
                         "observations nearest",
-                        request("GET", "/observations/nearest-geohash")
-                                .query("latitude", "51.5")
-                                .query("longitude", "-0.1")
+                        request("GET", "/observations/nearest")
+                                .query("lat", "51.5")
+                                .query("lon", "-0.1")
                                 .header("apikey", "obs-key"),
                         json("{\"station\":\"nearest\"}"),
                         Expected.json("observations", "metoffice_observations_nearest_station",
                                 test -> test.observationsTools.observationsNearestStation(51.5, -0.1), "station")),
                 Arguments.of(
                         "observations by geohash",
-                        request("GET", "/observations/observations/gcj8ds")
+                        request("GET", "/observations/gcj8ds")
                                 .header("apikey", "obs-key"),
                         json("{\"station\":\"gcj8ds\"}"),
                         Expected.json("observations", "metoffice_observations_by_geohash",
                                 test -> test.observationsTools.observationsByGeohash("gcj8ds"), "station")),
                 Arguments.of(
                         "observations by location",
-                        request("GET", "/observations/observations")
-                                .query("latitude", "51.5")
-                                .query("longitude", "-0.1")
+                        request("GET", "/observations/nearest")
+                                .query("lat", "51.5")
+                                .query("lon", "-0.1")
                                 .header("apikey", "obs-key"),
                         json("{\"station\":\"location\"}"),
                         Expected.json("observations", "metoffice_observations_by_location",
@@ -226,7 +226,7 @@ class MetOfficeToolsContainerTests {
                                 .header("apikey", "map-key"),
                         binary("image/png", "png".getBytes()),
                         Expected.binary("map-images", "metoffice_map_image_file",
-                                test -> test.mapImagesTools.mapImageFile("map-order", null, "map-file", false),
+                                test -> test.mapImagesTools.mapImageFile("map-order", null, "map-file", false, false),
                                 "cG5n")));
     }
 

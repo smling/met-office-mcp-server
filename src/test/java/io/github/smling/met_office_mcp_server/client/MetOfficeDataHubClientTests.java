@@ -68,6 +68,39 @@ class MetOfficeDataHubClientTests {
         server.verify();
     }
 
+    @Test
+    void getBinaryDebugReturnsCompactDiagnostics() {
+        URI uri = URI.create("https://example.test/file");
+        byte[] body = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz".getBytes();
+        server.expect(once(), requestTo(uri))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("apikey", "key"))
+                .andRespond(withSuccess(body, MediaType.IMAGE_PNG));
+
+        MetOfficeToolResponse response =
+                client.getBinary(MetOfficeProduct.MAP_IMAGES, "operation", uri, "key", MediaType.IMAGE_PNG, true);
+
+        assertEquals(200, response.status());
+        assertNull(response.binaryBase64());
+        assertNull(response.error());
+        assertEquals(body.length, response.data().get("byteLength").asInt());
+        assertEquals(104, response.data().get("base64Length").asInt());
+        assertEquals(80, response.data().get("base64Preview").asText().length());
+        assertEquals("YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5emFiY2RlZmdo",
+                response.data().get("base64Preview").asText());
+        assertNull(response.data().get("binaryBase64").stringValue());
+        server.verify();
+    }
+
+    @Test
+    void encodedPathSegmentEscapesReservedCharacters() {
+        URI uri = client.uri(
+                "https://example.test/base",
+                "/orders/order-1/latest/" + client.encodedPathSegment("cloud_amount_total_ts0_+00") + "/data");
+
+        assertEquals("https://example.test/base/orders/order-1/latest/cloud_amount_total_ts0_%2B00/data", uri.toString());
+    }
+
     @ParameterizedTest
     @ValueSource(ints = {300, 301, 400, 401, 403, 404, 409, 429, 500, 502, 503})
     void nonSuccessResponsesReturnTypedErrorEnvelope(int status) {

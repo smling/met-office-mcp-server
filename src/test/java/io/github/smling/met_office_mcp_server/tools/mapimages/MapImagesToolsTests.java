@@ -46,10 +46,11 @@ class MapImagesToolsTests {
         ArgumentCaptor<MapImageFileRequest> captor = ArgumentCaptor.forClass(MapImageFileRequest.class);
         when(client.file(captor.capture())).thenReturn(response);
 
-        assertSame(response, tools.mapImageFile("order-1", "12", "file-1", false));
+        assertSame(response, tools.mapImageFile("order-1", "12", "file-1", false, true));
         assertEquals("order-1", captor.getValue().orderId());
         assertEquals("file-1", captor.getValue().fileId());
         assertEquals(false, captor.getValue().includeLand());
+        assertEquals(true, captor.getValue().binaryDebug());
     }
 
     private MetOfficeToolResponse ok(String operation) {
