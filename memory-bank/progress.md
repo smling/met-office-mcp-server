@@ -33,6 +33,9 @@
 - Added shared local validation for MCP client inputs, including required order/file/collection/location IDs, coordinate bounds, finite coordinate checks, and six-character station geohashes. Encoded remaining dynamic DataHub path segments for latest-order, BPF forecast location, and observation geohash calls. Optimized binary debug responses so they calculate metadata and preview without producing the full base64 payload. Verified with `.\gradlew.bat test`.
 - Added structured application logging for Met Office DataHub calls, local validation rejections, missing API keys, upstream non-2xx responses, and transport/parsing exceptions. Added `MET_OFFICE_MCP_LOG_LEVEL` so deployments can switch package logs from `INFO` to `DEBUG` for endpoint-level traces.
 - Enabled JUnit 5 class-level parallel test execution through `src/test/resources/junit-platform.properties` while keeping test methods within each class sequential so shared test fixtures remain deterministic.
+- Added Prometheus registry support and exposed `health`, `info`, `metrics`, and `prometheus` actuator endpoints by default. Added custom Met Office DataHub client metrics for request duration, response bytes, and errors, plus OpenTelemetry client spans around DataHub calls. OTLP metrics and tracing export remain disabled by default and can be enabled through environment variables.
+- Refactored Met Office DataHub distributed tracing into a Spring AOP aspect so span creation, attributes, outcome mapping, and exception recording are centralized outside the shared HTTP client.
+- Added focused unit coverage for the DataHub tracing aspect, including JSON success, binary debug tagging, local validation errors, upstream non-success errors, runtime-error envelopes, and thrown exception handling.
 
 ## Follow-Up Notes
 

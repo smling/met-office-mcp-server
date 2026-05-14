@@ -13,6 +13,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import io.github.smling.met_office_mcp_server.MetOfficeTestSupport;
 import io.github.smling.met_office_mcp_server.model.MetOfficeProduct;
 import io.github.smling.met_office_mcp_server.model.MetOfficeToolResponse;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.net.URI;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -27,7 +28,9 @@ class MetOfficeDataHubClientTests {
 
     private final RestClient.Builder restClientBuilder = RestClient.builder();
     private final MockRestServiceServer server = MockRestServiceServer.bindTo(restClientBuilder).build();
-    private final MetOfficeDataHubClient client = MetOfficeTestSupport.client(restClientBuilder);
+    private final SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+    private final MetOfficeDataHubClient client =
+            new MetOfficeDataHubClient(restClientBuilder, MetOfficeTestSupport.objectMapper(), meterRegistry);
 
     @Test
     void getJsonAddsApiKeyHeaderAndParsesVendorPayload() {
@@ -46,6 +49,35 @@ class MetOfficeDataHubClientTests {
         assertEquals(true, response.data().get("ok").asBoolean());
         assertNull(response.binaryBase64());
         assertNull(response.error());
+        server.verify();
+    }
+
+    @Test
+    void getJsonRecordsClientMetrics() {
+        URI uri = URI.create("https://example.test/data");
+        server.expect(once(), requestTo(uri))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("apikey", "key"))
+                .andRespond(withSuccess("{\"ok\":true}", MediaType.APPLICATION_JSON));
+
+        client.getJson(MetOfficeProduct.MAP_IMAGES, "operation", uri, "key");
+
+        assertEquals(1, meterRegistry.get("metoffice.datahub.client.requests")
+                .tag("product", "map-images")
+                .tag("operation", "operation")
+                .tag("outcome", "success")
+                .tag("status", "200")
+                .tag("response.type", "json")
+                .timer()
+                .count());
+        assertEquals(11, meterRegistry.get("metoffice.datahub.client.response.bytes")
+                .tag("product", "map-images")
+                .tag("operation", "operation")
+                .tag("outcome", "success")
+                .tag("status", "200")
+                .tag("response.type", "json")
+                .summary()
+                .totalAmount());
         server.verify();
     }
 

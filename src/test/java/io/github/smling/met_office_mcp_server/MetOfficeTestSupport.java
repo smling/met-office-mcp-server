@@ -9,6 +9,7 @@ import io.github.smling.met_office_mcp_server.tools.atmospheric.AtmosphericTools
 import io.github.smling.met_office_mcp_server.tools.mapimages.MapImagesTools;
 import io.github.smling.met_office_mcp_server.tools.observations.ObservationsTools;
 import io.github.smling.met_office_mcp_server.tools.sitespecific.SiteSpecificTools;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.ObjectMapper;
 
@@ -32,7 +33,11 @@ public final class MetOfficeTestSupport {
     }
 
     public static MetOfficeDataHubClient client(RestClient.Builder restClientBuilder) {
-        return new MetOfficeDataHubClient(restClientBuilder, new ObjectMapper());
+        return new MetOfficeDataHubClient(restClientBuilder, objectMapper(), new SimpleMeterRegistry());
+    }
+
+    public static ObjectMapper objectMapper() {
+        return new ObjectMapper();
     }
 
     public static AtmosphericTools atmosphericTools(MetOfficeDataHubClient client, MetOfficeProperties properties) {

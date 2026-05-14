@@ -17,6 +17,7 @@ A Java 21 Spring Boot MCP server that exposes Met Office Weather DataHub product
 - 📦 JSON payload passthrough for vendor response bodies.
 - 🔐 Per-product Met Office API keys sent as `apikey` headers.
 - ⚠️ Typed error envelopes for missing keys, non-2xx responses, and local validation failures.
+- 📈 Actuator, Prometheus, OTLP metrics, and OTLP tracing support for Grafana observability.
 - 🧬 GraalVM native-image support through Gradle and Spring Boot buildpacks.
 
 ## 🧭 How It Works
@@ -72,8 +73,12 @@ Optional runtime settings:
 | --- | --- | --- |
 | `MET_OFFICE_MCP_IMAGE` | `ghcr.io/smling/met-office-mcp-server:latest` | Docker Compose image override. |
 | `MET_OFFICE_MCP_LOG_LEVEL` | `INFO` | Log level for this server's package; use `DEBUG` for request endpoint traces. |
+| `MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE` | `health,info,metrics,prometheus` | Exposed actuator endpoints. |
 | `MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED` | `false` | Enable OTLP metrics export when an OpenTelemetry collector is available. |
 | `MANAGEMENT_OTLP_METRICS_EXPORT_URL` | `http://localhost:4318/v1/metrics` | OTLP metrics endpoint used when export is enabled. |
+| `MANAGEMENT_TRACING_EXPORT_OTLP_ENABLED` | `false` | Enable OTLP trace export when an OpenTelemetry collector is available. |
+| `MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT` | `http://localhost:4318/v1/traces` | OTLP trace endpoint used when trace export is enabled. |
+| `MANAGEMENT_TRACING_SAMPLING_PROBABILITY` | `1.0` | Trace sampling probability for this service. |
 
 PowerShell:
 
@@ -119,6 +124,29 @@ Unix-like shells:
 
 The app starts as a Spring Boot WebMVC application on port `8080` unless `server.port` is overridden. Configure your MCP client to connect to the Spring AI MCP server endpoint exposed by the running application.
 
+## 📊 Observability
+
+Actuator exposes health and metrics endpoints by default:
+
+- `/actuator/health`
+- `/actuator/metrics`
+- `/actuator/prometheus`
+
+Grafana can monitor the service through Prometheus scraping `/actuator/prometheus`, or through an OpenTelemetry Collector receiving OTLP metrics and traces. Custom Met Office DataHub client metrics are emitted with product, operation, status, outcome, and response type tags:
+
+- `metoffice.datahub.client.requests`
+- `metoffice.datahub.client.response.bytes`
+- `metoffice.datahub.client.errors`
+
+To export OTLP metrics and traces to a local collector:
+
+```powershell
+$env:MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED="true"
+$env:MANAGEMENT_OTLP_METRICS_EXPORT_URL="http://localhost:4318/v1/metrics"
+$env:MANAGEMENT_TRACING_EXPORT_OTLP_ENABLED="true"
+$env:MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT="http://localhost:4318/v1/traces"
+```
+
 ## 🐳 Docker Usage
 
 Run the published image from GHCR:
@@ -148,8 +176,12 @@ services:
       MET_OFFICE_SITE_SPECIFIC_API_KEY: ${MET_OFFICE_SITE_SPECIFIC_API_KEY}
       MET_OFFICE_OBSERVATIONS_API_KEY: ${MET_OFFICE_OBSERVATIONS_API_KEY}
       MET_OFFICE_MAP_IMAGES_API_KEY: ${MET_OFFICE_MAP_IMAGES_API_KEY}
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: ${MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE:-health,info,metrics,prometheus}
       MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED: ${MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED:-false}
       MANAGEMENT_OTLP_METRICS_EXPORT_URL: ${MANAGEMENT_OTLP_METRICS_EXPORT_URL:-http://localhost:4318/v1/metrics}
+      MANAGEMENT_TRACING_EXPORT_OTLP_ENABLED: ${MANAGEMENT_TRACING_EXPORT_OTLP_ENABLED:-false}
+      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: ${MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT:-http://localhost:4318/v1/traces}
+      MANAGEMENT_TRACING_SAMPLING_PROBABILITY: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY:-1.0}
     restart: unless-stopped
 ```
 
@@ -163,7 +195,9 @@ MET_OFFICE_SITE_SPECIFIC_API_KEY=your-site-specific-key
 MET_OFFICE_OBSERVATIONS_API_KEY=your-observations-key
 MET_OFFICE_MAP_IMAGES_API_KEY=your-map-images-key
 MET_OFFICE_MCP_IMAGE=ghcr.io/smling/met-office-mcp-server:latest
+MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics,prometheus
 MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED=false
+MANAGEMENT_TRACING_EXPORT_OTLP_ENABLED=false
 ```
 
 > [!NOTE]

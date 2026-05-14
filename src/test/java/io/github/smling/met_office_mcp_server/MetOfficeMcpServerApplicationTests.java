@@ -12,6 +12,7 @@ import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.ai.mcp.annotation.context.DefaultMetaProvider;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.predicate.RuntimeHintsPredicates;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import io.github.smling.met_office_mcp_server.client.MetOfficeDataHubClient;
+import io.github.smling.met_office_mcp_server.client.MetOfficeDataHubTracingAspect;
 import io.github.smling.met_office_mcp_server.model.MetOfficeToolResponse;
 
 @SpringBootTest
@@ -39,6 +42,30 @@ class MetOfficeMcpServerApplicationTests {
 		assertFalse(Arrays.stream(applicationContext.getBeanDefinitionNames())
 				.anyMatch(beanName -> beanName.toLowerCase().contains("otlp")
 						&& beanName.toLowerCase().contains("meterregistry")));
+	}
+
+	@Test
+	void tracingExportIsDisabledByDefault() {
+		assertEquals("false", applicationContext.getEnvironment()
+				.getProperty("management.tracing.export.otlp.enabled"));
+		assertEquals("1.0", applicationContext.getEnvironment()
+				.getProperty("management.tracing.sampling.probability"));
+	}
+
+	@Test
+	void prometheusEndpointIsExposedByDefault() {
+		assertEquals("health,info,metrics,prometheus", applicationContext.getEnvironment()
+				.getProperty("management.endpoints.web.exposure.include"));
+	}
+
+	@Test
+	void dataHubTracingAspectIsRegistered() {
+		assertNotNull(applicationContext.getBean(MetOfficeDataHubTracingAspect.class));
+	}
+
+	@Test
+	void dataHubClientIsProxiedForTracing() {
+		assertTrue(AopUtils.isAopProxy(applicationContext.getBean(MetOfficeDataHubClient.class)));
 	}
 
 	@Test
