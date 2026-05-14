@@ -48,6 +48,8 @@ Follow standard Java conventions with 4-space indentation, one public top-level 
 
 No formatter or lint task is currently configured. Match the surrounding Spring Boot style, keep imports organized, and avoid adding broad abstractions before the application has clear module boundaries.
 
+Prefer `protected` over `private` for non-public helper methods when method-level unit coverage is required to maintain 100% coverage. Keep these helpers implementation-focused, avoid making them `public` only for tests, and test them from the matching package test class or a focused subclass when branch coverage cannot be reached clearly through public behavior.
+
 ## Javadoc Guidelines
 
 Create Javadoc for public APIs, MCP tool entry points, configuration properties, and non-obvious domain or integration behavior. Prefer concise comments that explain purpose, contract, inputs, outputs, side effects, and failure behavior where that information is not obvious from names and types.

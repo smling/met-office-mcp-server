@@ -40,6 +40,10 @@ Product tool adapters live under `tools/<product>/`. Preserve this layout so MCP
 
 Javadoc is expected for public APIs, MCP tool entry points, configuration properties, and non-obvious integration behavior. Comments should describe useful contracts and assumptions, not restate names or implementation details.
 
+## Testable Helper Visibility
+
+Use `protected` rather than `private` for non-public helper methods when direct method-level unit tests are needed to maintain 100% coverage. Do not make helpers `public` only for tests; keep them implementation-focused and cover them from matching package tests or focused subclasses.
+
 ## Test Strategy
 
 Use parameterized tests for Met Office tool and client behavior. Fast mock HTTP tests should cover every MCP method and representative non-200 responses during normal local runs. Testcontainers MockServer tests provide end-to-end HTTP coverage when Docker is available. Mockito tests cover thin MCP adapter delegation and request record construction.

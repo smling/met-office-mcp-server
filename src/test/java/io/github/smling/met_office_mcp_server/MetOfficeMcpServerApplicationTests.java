@@ -2,7 +2,9 @@ package io.github.smling.met_office_mcp_server;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -24,6 +26,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import io.github.smling.met_office_mcp_server.client.MetOfficeDataHubClient;
 import io.github.smling.met_office_mcp_server.client.MetOfficeDataHubTracingAspect;
 import io.github.smling.met_office_mcp_server.model.MetOfficeToolResponse;
+import tools.jackson.databind.JsonNode;
 
 @SpringBootTest
 class MetOfficeMcpServerApplicationTests {
@@ -88,17 +91,47 @@ class MetOfficeMcpServerApplicationTests {
 	}
 
 	@Test
+	void mcpDefaultMetaProviderMissingConstructorIsWrapped() {
+		RuntimeHints hints = new RuntimeHints();
+		NoSuchMethodException failure = new NoSuchMethodException("missing");
+		McpNativeRuntimeHints runtimeHints = new McpNativeRuntimeHints(() -> {
+			throw failure;
+		});
+
+		IllegalStateException actual = assertThrows(IllegalStateException.class,
+				() -> runtimeHints.registerHints(hints, getClass().getClassLoader()));
+
+		assertEquals("Spring AI DefaultMetaProvider no-arg constructor is missing", actual.getMessage());
+		assertInstanceOf(NoSuchMethodException.class, actual.getCause());
+		assertEquals(failure, actual.getCause());
+	}
+
+	@Test
 	void mcpToolResponseRecordsAreRegisteredForNativeReflection() throws NoSuchMethodException {
 		RuntimeHints hints = new RuntimeHints();
 
 		new McpNativeRuntimeHints().registerHints(hints, getClass().getClassLoader());
 
+		assertTrue(RuntimeHintsPredicates.reflection()
+				.onConstructorInvocation(MetOfficeToolResponse.class.getConstructor(
+						String.class,
+						String.class,
+						int.class,
+						String.class,
+						JsonNode.class,
+						String.class,
+						MetOfficeToolResponse.MetOfficeError.class))
+				.test(hints));
 		for (String accessor : new String[] {"product", "operation", "status", "contentType", "data",
 				"binaryBase64", "error"}) {
 			assertTrue(RuntimeHintsPredicates.reflection()
 					.onMethodInvocation(MetOfficeToolResponse.class.getMethod(accessor))
 					.test(hints));
 		}
+		assertTrue(RuntimeHintsPredicates.reflection()
+				.onConstructorInvocation(MetOfficeToolResponse.MetOfficeError.class.getConstructor(
+						String.class, int.class, String.class, String.class, String.class))
+				.test(hints));
 		for (String accessor : new String[] {"message", "status", "product", "endpoint", "responseBodyPreview"}) {
 			assertTrue(RuntimeHintsPredicates.reflection()
 					.onMethodInvocation(MetOfficeToolResponse.MetOfficeError.class.getMethod(accessor))

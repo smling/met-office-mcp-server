@@ -17,10 +17,21 @@ import io.github.smling.met_office_mcp_server.model.MetOfficeToolResponse;
  */
 class McpNativeRuntimeHints implements RuntimeHintsRegistrar {
 
+    private final DefaultMetaProviderConstructorResolver defaultMetaProviderConstructorResolver;
+
+    McpNativeRuntimeHints() {
+        this(DefaultMetaProvider.class::getConstructor);
+    }
+
+    McpNativeRuntimeHints(DefaultMetaProviderConstructorResolver defaultMetaProviderConstructorResolver) {
+        this.defaultMetaProviderConstructorResolver = defaultMetaProviderConstructorResolver;
+    }
+
     @Override
     public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
         try {
-            hints.reflection().registerConstructor(DefaultMetaProvider.class.getConstructor(), ExecutableMode.INVOKE);
+            hints.reflection()
+                    .registerConstructor(defaultMetaProviderConstructorResolver.getConstructor(), ExecutableMode.INVOKE);
         } catch (NoSuchMethodException ex) {
             throw new IllegalStateException("Spring AI DefaultMetaProvider no-arg constructor is missing", ex);
         }
@@ -40,6 +51,12 @@ class McpNativeRuntimeHints implements RuntimeHintsRegistrar {
                 builder.withMethod(component.getAccessor().getName(), List.of(), ExecutableMode.INVOKE);
             }
         });
+    }
+
+    @FunctionalInterface
+    interface DefaultMetaProviderConstructorResolver {
+
+        java.lang.reflect.Constructor<DefaultMetaProvider> getConstructor() throws NoSuchMethodException;
     }
 
 }

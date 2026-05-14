@@ -36,6 +36,10 @@
 - Added Prometheus registry support and exposed `health`, `info`, `metrics`, and `prometheus` actuator endpoints by default. Added custom Met Office DataHub client metrics for request duration, response bytes, and errors, plus OpenTelemetry client spans around DataHub calls. OTLP metrics and tracing export remain disabled by default and can be enabled through environment variables.
 - Refactored Met Office DataHub distributed tracing into a Spring AOP aspect so span creation, attributes, outcome mapping, and exception recording are centralized outside the shared HTTP client.
 - Added focused unit coverage for the DataHub tracing aspect, including JSON success, binary debug tagging, local validation errors, upstream non-success errors, runtime-error envelopes, and thrown exception handling.
+- Expanded native runtime hint tests to assert constructor reflection hints for `MetOfficeToolResponse` and `MetOfficeError`, covering the record-constructor path in `McpNativeRuntimeHints.registerHints`.
+- Added a test seam for the Spring AI `DefaultMetaProvider` constructor lookup and covered the `NoSuchMethodException` wrapping branch in `McpNativeRuntimeHints.registerHints`.
+- Made the binary base64 preview helper testable and covered the empty-payload preview branch.
+- Made the error body preview helper testable and covered within-limit, exact-limit, and truncation behavior.
 
 ## Follow-Up Notes
 

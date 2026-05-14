@@ -239,7 +239,7 @@ public class MetOfficeDataHubClient {
         return ((byteLength + 2L) / 3) * 4;
     }
 
-    private String base64Preview(byte[] body) {
+    protected String base64Preview(byte[] body) {
         int previewLength = (int) Math.min(BINARY_PREVIEW_LENGTH, base64Length(body.length));
         if (previewLength == 0) {
             return "";
@@ -312,7 +312,7 @@ public class MetOfficeDataHubClient {
         }
     }
 
-    private String preview(byte[] body) {
+    protected String preview(byte[] body) {
         String value = new String(body, StandardCharsets.UTF_8);
         if (value.length() <= ERROR_PREVIEW_LENGTH) {
             return value;

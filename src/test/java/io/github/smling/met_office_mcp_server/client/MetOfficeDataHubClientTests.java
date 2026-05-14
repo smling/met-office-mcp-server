@@ -15,6 +15,7 @@ import io.github.smling.met_office_mcp_server.model.MetOfficeProduct;
 import io.github.smling.met_office_mcp_server.model.MetOfficeToolResponse;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -143,6 +144,30 @@ class MetOfficeDataHubClientTests {
         assertEquals("YQ==", response.data().get("base64Preview").asText());
         assertNull(response.data().get("binaryBase64").stringValue());
         server.verify();
+    }
+
+    @Test
+    void base64PreviewReturnsEmptyStringForEmptyPayload() {
+        assertEquals("", client.base64Preview(new byte[0]));
+    }
+
+    @Test
+    void previewReturnsWholeBodyWhenWithinLimit() {
+        assertEquals("error", client.preview("error".getBytes(StandardCharsets.UTF_8)));
+    }
+
+    @Test
+    void previewReturnsWholeBodyAtLimit() {
+        String value = "x".repeat(2_000);
+
+        assertEquals(value, client.preview(value.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    @Test
+    void previewTruncatesBodyOverLimit() {
+        String value = "x".repeat(2_001);
+
+        assertEquals("x".repeat(2_000), client.preview(value.getBytes(StandardCharsets.UTF_8)));
     }
 
     @Test
